@@ -1,4 +1,6 @@
 # php-form-validator
+[![Build Status](https://travis-ci.org/pdscopes/php-form-validator.svg?branch=master)](https://travis-ci.org/pdscopes/php-form-validator)
+
 Simple, extendable form validator for multi-dimensional forms
 
 ## Validation Rules
