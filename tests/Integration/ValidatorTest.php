@@ -196,6 +196,56 @@ class ValidatorTest extends TestCase
         $this->assertEquals($errors, $this->validator->getProcessedErrors());
     }
 
+    public function testValidateNotEqualsValid()
+    {
+        $rules  = ['choice2' => 'not-equals:choice1'];
+        $values = ['choice1' => 'apple', 'choice2' => 'orange'];
+        $this->validator->validate($values, $rules);
+
+        $this->assertFalse($this->validator->hasErrors());
+    }
+    public function testValidateNotEqualsValidDots()
+    {
+        $rules  = ['field.*.choice2' => 'not-equals:field.*.choice1'];
+        $values = [
+            'field' => [
+                ['choice1' => 'apple', 'choice2' => 'orange'],
+                ['choice1' => 1, 'choice2' => '2']
+            ]
+        ];
+        $this->validator->validate($values, $rules);
+
+        $this->assertFalse($this->validator->hasErrors());
+    }
+    public function testValidateNotEqualsInvalid()
+    {
+        $rules  = ['choice2' => 'not-equals:choice1'];
+        $values = ['choice1' => 'apple', 'choice2' => 'apple'];
+        $errors = ['errors' => ['choice2' => ['not-equals' => 'Choice2 must not equal Choice1']]];
+        $this->validator->validate($values, $rules);
+
+        $this->assertTrue($this->validator->hasErrors());
+        $this->assertEquals($errors, $this->validator->getProcessedErrors());
+    }
+    public function testValidateNotEqualsInvalidDots()
+    {
+        $rules  = ['field.*.choice2' => 'not-equals:field.*.choice1'];
+        $values = [
+            'field' => [
+                ['choice1' => 'apple', 'choice2' => 'apple'],
+                ['choice1' => 1, 'choice2' => '1']
+            ]
+        ];
+        $errors = ['errors' => [
+            'field.0.choice2' => ['not-equals' => 'Field 0 choice2 must not equal Field 0 choice1'],
+            'field.1.choice2' => ['not-equals' => 'Field 1 choice2 must not equal Field 1 choice1'],
+        ]];
+        $this->validator->validate($values, $rules);
+
+        $this->assertTrue($this->validator->hasErrors());
+        $this->assertEquals($errors, $this->validator->getProcessedErrors());
+    }
+
     public function testValidateIdenticalValid()
     {
         $rules  = ['confirm' => 'identical:password'];
@@ -218,6 +268,28 @@ class ValidatorTest extends TestCase
         $this->assertFalse($this->validator->hasErrors());
     }
 
+    public function testValidateNotIdenticalValid()
+    {
+        $rules  = ['choice2' => 'not-identical:choice1'];
+        $values = ['choice1' => 'apple', 'choice2' => 'orang'];
+        $this->validator->validate($values, $rules);
+
+        $this->assertFalse($this->validator->hasErrors());
+    }
+    public function testValidateNotIdenticalValidDots()
+    {
+        $rules  = ['field.*.choice2' => 'not-identical:field.*.choice1'];
+        $values = [
+            'field' => [
+                ['choice1' => 'apple', 'choice2' => 'orange'],
+                ['choice1' => 1, 'choice2' => '1']
+            ]
+        ];
+        $this->validator->validate($values, $rules);
+
+        $this->assertFalse($this->validator->hasErrors());
+    }
+
     public function testValidateInValid()
     {
         $rules  = ['field' => 'in:alpha,beta,gamma'];
@@ -231,6 +303,25 @@ class ValidatorTest extends TestCase
         $rules  = ['field' => 'in:alpha,beta,gamma'];
         $values = ['field' => 'omega'];
         $errors = ['errors' => ['field' => ['in' => 'Field must be: alpha, beta, gamma']]];
+        $this->validator->validate($values, $rules);
+
+        $this->assertTrue($this->validator->hasErrors());
+        $this->assertEquals($errors, $this->validator->getProcessedErrors());
+    }
+
+    public function testValidateNotInValid()
+    {
+        $rules  = ['field' => 'not-in:alpha,beta,gamma'];
+        $values = ['field' => 'omega'];
+        $this->validator->validate($values, $rules);
+
+        $this->assertFalse($this->validator->hasErrors());
+    }
+    public function testValidateNotInInvalid()
+    {
+        $rules  = ['field' => 'not-in:alpha,beta,gamma'];
+        $values = ['field' => 'beta'];
+        $errors = ['errors' => ['field' => ['not-in' => 'Field must not be: alpha, beta, gamma']]];
         $this->validator->validate($values, $rules);
 
         $this->assertTrue($this->validator->hasErrors());

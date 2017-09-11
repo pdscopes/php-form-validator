@@ -335,6 +335,38 @@ class Validator
     }
 
     /**
+     * not-equals:another-field
+     *
+     * @param array  $data
+     * @param string $pattern
+     * @param string $rule
+     * @param array  $parameters
+     */
+    public function validateNotEquals($data, $pattern, $rule, $parameters)
+    {
+        $field   = $parameters[0];
+        $isWild  = strpos($field, '*') !== false;
+        $overlap = Str::overlapl($pattern, $field);
+
+        // Check that the pattern and field can be compared
+        if ($isWild && $overlap === false) {
+            throw new \InvalidArgumentException('Cannot match pattern to field');
+        }
+
+        // Check values are equal
+        foreach ($this->getValues($data, $pattern) as $attribute => $value) {
+            $fieldAttribute = $isWild ? Str::overlaplMerge($overlap, $attribute, $field) : $field;
+            $fieldValue     = ArrDots::get($data, $fieldAttribute);
+
+            if ($fieldValue != $value) {
+                continue;
+            }
+
+            $this->addError($attribute, $rule, [':field' => Str::prettyAttribute($fieldAttribute)]);
+        }
+    }
+
+    /**
      * identical:another-field
      *
      * @param array  $data
@@ -366,6 +398,38 @@ class Validator
         }
     }
 
+    /**
+     * not-identical:another-field
+     *
+     * @param array  $data
+     * @param string $pattern
+     * @param string $rule
+     * @param array  $parameters
+     */
+    public function validateNotIdentical($data, $pattern, $rule, $parameters)
+    {
+        $field   = $parameters[0];
+        $isWild  = strpos($field, '*') !== false;
+        $overlap = Str::overlapl($pattern, $field);
+
+        // Check that the pattern and field can be compared
+        if ($isWild && $overlap === false) {
+            throw new \InvalidArgumentException('Cannot match pattern to field');
+        }
+
+        // Check values are equal
+        foreach ($this->getValues($data, $pattern) as $attribute => $value) {
+            $fieldAttribute = $isWild ? Str::overlaplMerge($overlap, $attribute, $field) : $field;
+            $fieldValue     = ArrDots::get($data, $fieldAttribute);
+
+            if ($fieldValue !== $value) {
+                continue;
+            }
+
+            $this->addError($attribute, $rule, [':field' => Str::prettyAttribute($fieldAttribute)]);
+        }
+    }
+
 
     /**
      * in:<value>(,<value>)*
@@ -382,6 +446,28 @@ class Validator
                 continue;
             }
             if (in_array($value, $parameters)) {
+                continue;
+            }
+
+            $this->addError($attribute, $rule, [':values' => implode(', ', $parameters)]);
+        }
+    }
+
+    /**
+     * not-in:<value>(,<value>)*
+     *
+     * @param array  $data
+     * @param string $pattern
+     * @param string $rule
+     * @param array  $parameters
+     */
+    public function validateNotIn($data, $pattern, $rule, $parameters)
+    {
+        foreach ($this->getValues($data, $pattern) as $attribute => $value) {
+            if (null === $value) {
+                continue;
+            }
+            if (!in_array($value, $parameters)) {
                 continue;
             }
 

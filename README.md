@@ -89,12 +89,32 @@ $rulesSet = [
 ];
 ```
 
+### Not Equals
+The field's value must not equal the other specified field's value.
+```php
+// Example Usage
+$rulesSet = [
+    'field0' => 'not-equals:field1',
+    'field1' => 'required'
+];
+```
+
 ### Identical
 The field's value must be identical the other specified field's value.
 ```php
 // Example Usage
 $rulesSet = [
-    'field0' => 'equals:field1',
+    'field0' => 'identical:field1',
+    'field1' => 'required'
+];
+```
+
+### Not Identical
+The field's value must not be identical the other specified field's value.
+```php
+// Example Usage
+$rulesSet = [
+    'field0' => 'not-identical:field1',
     'field1' => 'required'
 ];
 ```
@@ -106,6 +126,15 @@ The field must equal one of the specified options.
 // Example Usage
 $rulesSet = [
     'field' => 'in:apple,pear,orange'
+];
+```
+
+### Not In
+The field must not equal one of the specified options.
+```php
+// Example Usage
+$rulesSet = [
+    'field' => 'not-in:apple,pear,orange'
 ];
 ```
 

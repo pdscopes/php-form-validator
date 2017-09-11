@@ -7,9 +7,12 @@ return [
     'required-with' => ':attribute is required when :field is present',
 
     'equals'        => ':attribute must equal :field',
+    'not-equals'    => ':attribute must not equal :field',
     'identical'     => ':attribute must be identical to :field',
+    'not-identical' => ':attribute must not be identical to :field',
 
     'in'            => ':attribute must be: :values',
+    'not-in'        => ':attribute must not be: :values',
     'contains-only' => ':attribute must only contain: :values',
     'min-arr-count' => ':attribute must contain at least :min item(s)',
     'max-arr-count' => ':attribute must contain at most :max item(s)',
