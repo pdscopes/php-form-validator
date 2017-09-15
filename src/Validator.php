@@ -543,7 +543,7 @@ class Validator
                 break;
             }
 
-            $this->addError($attribute2, $rule, [':min' => $max], $rule);
+            $this->addError($attribute2, $rule, [':max' => $max], $rule);
         }
     }
 
@@ -594,7 +594,7 @@ class Validator
                 break;
             }
 
-            $this->addError($attribute2, $rule, [':min' => $max], $rule);
+            $this->addError($attribute2, $rule, [':max' => $max], $rule);
         }
     }
 
@@ -738,7 +738,7 @@ class Validator
                 break;
             }
 
-            $this->addError($attribute2, $rule, [':min' => $max], $rule);
+            $this->addError($attribute2, $rule, [':max' => $max], $rule);
         }
     }
 
