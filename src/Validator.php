@@ -486,7 +486,7 @@ class Validator
     public function validateContainsOnly($data, $pattern, $rule, $parameters)
     {
         foreach ($this->getValues($data, $pattern) as $attribute => $value) {
-            if (null === $value) {
+            if (null === $value || empty($value)) {
                 continue;
             }
             if (count($value) == count(array_intersect($value, $parameters))) {
@@ -561,7 +561,7 @@ class Validator
         $min = $parameters[0];
 
         foreach ($this->getValues($data, $pattern) as $attribute2 => $value) {
-            if (null === $value) {
+            if (null === $value || empty($value)) {
                 continue;
             }
 
@@ -586,7 +586,7 @@ class Validator
         $max = $parameters[0];
 
         foreach ($this->getValues($data, $pattern) as $attribute2 => $value) {
-            if (null === $value) {
+            if (null === $value || empty($value)) {
                 continue;
             }
 
@@ -613,7 +613,7 @@ class Validator
             return;
         }
         foreach ($this->getValues($data, $pattern) as $attribute => $value) {
-            if (null === $value) {
+            if (null === $value || empty($value)) {
                 continue;
             }
             if ($value > $lowerBound) {
@@ -638,7 +638,7 @@ class Validator
             return;
         }
         foreach ($this->getValues($data, $pattern) as $attribute => $value) {
-            if (null === $value) {
+            if (null === $value || empty($value)) {
                 continue;
             }
             if ($value < $upperBound) {
@@ -660,7 +660,7 @@ class Validator
     public function validateAlpha($data, $pattern, $rule)
     {
         foreach ($this->getValues($data, $pattern) as $attribute => $value) {
-            if (null === $value) {
+            if (null === $value || empty($value)) {
                 continue;
             }
             if (preg_match('/^([a-zÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÒÓÔÕÖßÙÚÛÜÝàáâãäåçèéêëìíîïðòóôõöùúûüýÿ])+$/i', $value) === 1) {
@@ -681,7 +681,7 @@ class Validator
     public function validateAlphaNumeric($data, $pattern, $rule)
     {
         foreach ($this->getValues($data, $pattern) as $attribute => $value) {
-            if (null === $value) {
+            if (null === $value || empty($value)) {
                 continue;
             }
             if (preg_match('/^([a-z0-9ÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÒÓÔÕÖßÙÚÛÜÝàáâãäåçèéêëìíîïðòóôõöùúûüýÿ])+$/i', $value) === 1) {
@@ -705,7 +705,7 @@ class Validator
         $min = $parameters[0];
 
         foreach ($this->getValues($data, $pattern) as $attribute2 => $value) {
-            if (null === $value) {
+            if (null === $value || empty($value)) {
                 continue;
             }
 
@@ -730,7 +730,7 @@ class Validator
         $max = $parameters[0];
 
         foreach ($this->getValues($data, $pattern) as $attribute2 => $value) {
-            if (null === $value) {
+            if (null === $value || empty($value)) {
                 continue;
             }
 
@@ -755,7 +755,7 @@ class Validator
         $length = $parameters[0];
 
         foreach ($this->getValues($data, $pattern) as $attribute => $value) {
-            if (null === $value) {
+            if (null === $value || empty($value)) {
                 continue;
             }
             if (strlen($value) === (int) $length) {
@@ -776,7 +776,7 @@ class Validator
     public function validateHumanName($data, $pattern, $rule)
     {
         foreach ($this->getValues($data, $pattern) as $attribute => $value) {
-            if (null === $value) {
+            if (null === $value || empty($value)) {
                 continue;
             }
             if (preg_match('/^([a-zÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÒÓÔÕÖßÙÚÛÜÝàáâãäåçèéêëìíîïðòóôõöùúûüýÿ \'-])+$/i', $value) === 1) {
@@ -804,7 +804,7 @@ class Validator
         }
 
         foreach ($this->getValues($data, $pattern) as $attribute => $value) {
-            if (null === $value) {
+            if (null === $value || empty($value)) {
                 continue;
             }
             if (call_user_func($is_a_func, $value)) {
@@ -826,7 +826,7 @@ class Validator
     public function validateEmail($data, $pattern, $rule)
     {
         foreach ($this->getValues($data, $pattern) as $attribute => $value) {
-            if (null === $value) {
+            if (null === $value || empty($value)) {
                 continue;
             }
             if (false !== filter_var($value, FILTER_VALIDATE_EMAIL)) {
@@ -851,7 +851,7 @@ class Validator
     {
         $format = !empty($parameters[0]) ? $parameters[0] : 'Y-m-d';
         foreach ($this->getValues($data, $pattern) as $attribute => $value) {
-            if (null === $value) {
+            if (null === $value || empty($value)) {
                 continue;
             }
             $d = \DateTime::createFromFormat($format, $value);
@@ -873,7 +873,7 @@ class Validator
     public function validateUrl($data, $pattern, $rule)
     {
         foreach ($this->getValues($data, $pattern) as $attribute => $value) {
-            if (null === $value) {
+            if (null === $value || empty($value)) {
                 continue;
             }
             if (false !== filter_var($value, FILTER_VALIDATE_URL)) {
@@ -897,7 +897,7 @@ class Validator
     public function validateCardNumber($data, $pattern, $rule)
     {
         foreach ($this->getValues($data, $pattern) as $attribute => $value) {
-            if (null === $value) {
+            if (null === $value || empty($value)) {
                 continue;
             }
 
