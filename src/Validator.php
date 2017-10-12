@@ -561,7 +561,7 @@ class Validator
         $min = $parameters[0];
 
         foreach ($this->getValues($data, $pattern) as $attribute2 => $value) {
-            if (null === $value || empty($value)) {
+            if (null === $value || ($value != '0' && empty($value))) {
                 continue;
             }
 
@@ -586,7 +586,7 @@ class Validator
         $max = $parameters[0];
 
         foreach ($this->getValues($data, $pattern) as $attribute2 => $value) {
-            if (null === $value || empty($value)) {
+            if (null === $value || ($value != '0' && empty($value))) {
                 continue;
             }
 

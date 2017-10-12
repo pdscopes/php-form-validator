@@ -394,6 +394,12 @@ class ValidatorTest extends TestCase
         $this->validator->validate($values, $rules);
 
         $this->assertTrue($this->validator->hasErrors());
+
+        $rules  = ['field' => 'min:5'];
+        $values = ['field' => 0];
+        $this->validator->validate($values, $rules);
+
+        $this->assertTrue($this->validator->hasErrors());
     }
 
     public function testValidateMaxValid()
@@ -408,6 +414,12 @@ class ValidatorTest extends TestCase
     {
         $rules  = ['field' => 'max:5'];
         $values = ['field' => 6];
+        $this->validator->validate($values, $rules);
+
+        $this->assertTrue($this->validator->hasErrors());
+
+        $rules  = ['field' => 'max:-1'];
+        $values = ['field' => 0];
         $this->validator->validate($values, $rules);
 
         $this->assertTrue($this->validator->hasErrors());
