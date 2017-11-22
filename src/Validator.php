@@ -884,6 +884,29 @@ class Validator
         }
     }
 
+    /**
+     * uuid
+     *
+     * @param array  $data
+     * @param string $pattern
+     * @param string $rule
+     */
+    public function validateUuid($data, $pattern, $rule)
+    {
+        $uuidPattern = '/^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$/';
+
+        foreach ($this->getValues($data, $pattern) as $attribute => $value) {
+            if (null === $value || empty($value)) {
+                continue;
+            }
+            if (1 === preg_match($uuidPattern, $value)) {
+                continue;
+            }
+
+            $this->addError($attribute, $rule);
+        }
+    }
+
 
     /**
      * card-number

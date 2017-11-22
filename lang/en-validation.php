@@ -34,6 +34,7 @@ return [
     'email'         => ':attribute must be an email address',
     'date'          => ':attribute must be a date in the format: :format',
     'url'           => ':attribute must be a valid URL',
+    'uuid'          => ':attribute must be a valid UUID',
 
     'card-number'   => ':attribute must be a valid card number',
 ];

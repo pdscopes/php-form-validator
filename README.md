@@ -295,6 +295,15 @@ $rulesSet = [
 ];
 ```
 
+### UUID
+The field must be a valid UUID (\universally unique identifier).
+```php
+// Example Usage
+$rulesSet = [
+    'field' => 'uuid'
+];
+```
+
 
 ### Card Number
 The field must be a valid card number. See
