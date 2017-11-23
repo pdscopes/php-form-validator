@@ -804,7 +804,8 @@ class Validator
         }
 
         foreach ($this->getValues($data, $pattern) as $attribute => $value) {
-            if (null === $value || empty($value)) {
+            // As "is:<type>" is validating value type only ignore null
+            if (null === $value) {
                 continue;
             }
             if (call_user_func($is_a_func, $value)) {
