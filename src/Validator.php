@@ -284,6 +284,10 @@ class Validator
         if ($isWild && $overlap === false) {
             throw new \InvalidArgumentException('Cannot match pattern to field');
         }
+        // If the required with field exists and the pattern field does not
+        if (ArrDots::has($data, $field, '*') && !ArrDots::has($data, $pattern, '*')) {
+            $this->addError($pattern, $rule, [':field' => Str::prettyAttribute($field)]);
+        }
 
         // Check value is not null
         foreach ($this->getValues($data, $pattern) as $attribute => $value) {
