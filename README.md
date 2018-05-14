@@ -40,6 +40,107 @@ $input = [
 
 The following are all the validation rules that this library provides:
 
+| Rule Name                                 | Keyword           | Parameters        | Desciption |
+|:----------------------------------------- |:----------------- |:----------------- |:---------- |
+| [Present](###present)                     | `present`         |                   | The field must be present but can have any value including `null`. |
+| [Required](###required)                   | `required`        |                   | The field must be present and cannot be `null` (can be an empty string). |
+| [Required If](###required-if)             | `required-if`     | `field(,value)+`  | The field is required if the specified field(s) and the specified value(s). |
+| [Requried With](###required-with)         | `required-with`   | `field`           | The field is required if the other field is not `null`. |
+| [Equals](###equals)                       | `equals`          | `field`           | The field's value must equals the other specified field's value. |
+| [Not Equals](###not-equals)               | `not-equals`      | `field`           | The field's value must not equal the other specified field's value. |
+| [Identical](###identical)                 | `identical`       | `field`           | The field's value must be identical the other specified field's value. |
+| [Not Identical](###not-identical)         | `not-identical`   | `field`           | The field's value must not be identical the other specified field's value. |
+| [In](###in)                               | `in`              | `value(,value)*`  | The field must equal one of the specified options. |
+| [Not In](###not-in)                       | `not-in`          | `value(,value)*`  | The field must not equal one of the specified options. |
+| [Contains Only](###contains-only)         | `contains-only`   | `value(,value)*`  | The field should be an array and must contain only the specified options. |
+| [Minimum Array Count](###min-arr-count)   | `min-arr-count`   | `int`             | The field should be an array and must have an `array_count` of at least the specified value. |
+| [Maximum Array Count](###max-arr-count)   | `max-arr-count`   | `int`             | The field should be an array and must have an `array_count` of at most the specified value. |
+| [Minimum](###min)                         | `min`             | `int`             | The field should be numeric and must be at least the specified value. |
+| [Maximum](###max)                         | `max`             | `int`             | The field should be numeric and must be at most the specified value. |
+| [Greater Than](###greater-than)           | `greater-than`    | `field`           | The field should be numeric and must have a value greater than the other field. |
+| [Less Than](###less-than)                 | `less-than`       | `field`           | The field should be numeric and must have a value less than the other field. |
+| [Alpha](###alpha)                         | `alpha`           |                   | The field must only contain alphabetic characters. |
+| [Alpha Numeric](###alpha-numeric)         | `alpha-numeric`   |                   | The field must only contain alphabetic and numerical characters. |
+| [Minimum String Length](###min-str-len)   | `min-str-len`     | `int`             | The field should be string and must have a `strlen` of at least the specified value. |
+| [Maximum String Length](###max-str-len)   | `max-str-len`     | `int`             | The field should be a string and must have a `strlen` of at most the specified value. |
+| [String Length](###str-len)               | `str-len`         | `int`             | The field should be a string and must have a `strlen` of exactly the specified value. |
+| [Human Name](###human-name)               | `human-name`      |                   | The field must be a valid human name. |
+| [Is: ...](###is)                          | `is`              | `type`            | The field must be of the specified basic PHP type. There must be a corresponding `is_<type>` method. |
+| [Email](###email)                         | `email`           |                   | The field must be a valid email address |
+| [Date](###date)                           | `date`            | `(format)?`       | The field must be a valid date in the specified format (defaults to `'Y-m-d'`). |
+| [URL](###url)                             | `url`             |                   | The field must be a valid URL. |
+| [UUID](###uuid)                           | `uuid`            |                   | The field must be a valid UUID (\universally unique identifier). |
+| [Card Number](###card-number)             | `card-number`     |                   | The field must be a valid card number. |
+
+## Adding Extra Rules
+Extra rules can be added to the validator to extend its functionality to provide specific rules for your project.
+If you believe your rule should be added to the core library please submit a pull request.
+To add your extra rule you must call both `addRule` and `setRuleMessage`.
+
+### Simple extra rule
+For example, if you wanted to add a rule that would validate that a timezone was valid:
+
+```php
+// Add the rule to the validator
+$validator = new Validator;
+$validator->addRule('timezone', function (Validator $validator, array $data, $pattern, $rule) {
+    foreach ($validator->getValues($data, $pattern as $attribute => $value) {
+        if (null === $value) {
+            continue;
+        }
+        if (in_array($value, listTimezones())) {
+            continue;
+        }
+
+        $validator->addError($attribute, $rule);
+    }
+});
+$validator->setRuleMessage('timezone', ':attribute must be an timezone');
+
+
+// Validate using the new rule
+$rules = [
+    'timezone' => 'present|timezone',
+];
+$validator->validate($_POST, $rules);
+```
+
+### Extra rule with parameters
+For example, if you wanted to add a rule that would validate that an identifier existed in your database:
+
+```php
+// Add the rule to the validator
+$validator = new Validator;
+$validator->addRule('model-exists', function (Validator $validator, array $data, $pattern, $rule, $array $parameters) {
+    // Connect to database
+    $db = getDbInstance();
+    list($model, $property) = $parameters;
+
+    foreach ($validator->getValues($data, $pattern as $attribute => $value) {
+        if (null === $value) {
+            continue;
+        }
+        if (doesModelExist($db, $model, $property, $value)) {
+            continue;
+        }
+
+        $validator->addError($attribute, $rule, [
+            ':model' => $model
+        ]);
+    }
+});
+$validator->setRuleMessage('model-exists', ':attribute must be an existing :model');
+
+
+// Validate using the new rule
+$rules = [
+    'uuid' => 'required|model-exists:user,uuid',
+];
+$validator->validate($_POST, $rules);
+```
+
+
+## Validation Rules
 ### Present
 The field must be present but can have any value including `null`.
 ```php

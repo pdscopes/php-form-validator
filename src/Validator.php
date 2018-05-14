@@ -5,18 +5,22 @@ namespace MadeSimple\Validator;
 use MadeSimple\Arrays\Arr;
 use MadeSimple\Arrays\ArrDots;
 
-/**
- * Class Validator
- *
- * @package MadeSimple\Validator
- * @author  Peter Scopes <peter.scopes@gmail.com>
- */
 class Validator
 {
     /**
+     * @var string
+     */
+    protected $lang;
+
+    /**
+     * @var string
+     */
+    protected $langDir;
+
+    /**
      * @var array Associative array of rule name to callable
      */
-    protected $validators = [];
+    protected $rules;
 
     /**
      * @var array Associative array of rule name to message
@@ -34,28 +38,87 @@ class Validator
      * @param string $lang
      * @param string $langDir
      */
-    public function __construct($lang = 'en', $langDir = __DIR__ . '/../lang/')
+    public function __construct($lang = 'en', $langDir = __DIR__ . '/lang/')
     {
-        $this->setLanguage($lang, $langDir)->reset();
+        $this->lang    = $lang;
+        $this->langDir = $langDir;
+        $this->reset();
     }
 
     /**
-     * Set the validator language.
+     * Set the rules of this Validator.
      *
      * @param string $lang
      * @param string $langDir
-     *
      * @return Validator
      */
-    public function setLanguage($lang = 'en', $langDir = __DIR__ . '/../lang/')
+    public function setLanguage($lang = 'en', $langDir = __DIR__ . '/lang/')
     {
-        $langFile = realpath($langDir . $lang . '-validation.php');
+        $this->lang    = $lang;
+        $this->langDir = $langDir;
+
+        $langFile = realpath($langDir . $lang . '.php');
         if (!file_exists($langFile)) {
-            throw new \InvalidArgumentException('No such file: ' . $langFile);
+            throw new \InvalidArgumentException('No such file: ' . $langDir . $lang . '.php');
         }
 
-        $this->messages = require $langFile;
+        $callable = require $langFile;
+        $callable($this);
 
+        return $this;
+    }
+
+    /**
+     * Set the message for the rule with the given name.
+     *
+     * @param string $name
+     * @param string $message
+     * @return \MadeSimple\Validator\Validator
+     */
+    public function setRuleMessage(string $name, string $message)
+    {
+        $this->messages['rules'][$name] = $message;
+        return $this;
+    }
+
+    /**
+     * Set the message for the attribute with the given name.
+     *
+     * @param string $name
+     * @param string $message
+     * @return \MadeSimple\Validator\Validator
+     */
+    public function setAttributeMessage(string $name, string $message)
+    {
+        $this->messages['custom'][$name] = $message;
+        return $this;
+    }
+
+    /**
+     * Add a new rule to the validator.
+     * ```php
+     * function (Validator $validator, array $data, $pattern, $rule, array $parameters) {
+     *     foreach ($validator->getValues($data, $pattern) as $attribute => $value) {
+     *         if (null === $value) {
+     *             continue;
+     *         }
+     *         if (in_array($value, $parameters)) {
+     *             continue;
+     *         }
+     *
+     *         $validator->addError($attribute, $rule, [':values' => implode(', ', $parameters)]);
+     *     }
+     * }
+     * ```
+     *
+     * @param string $name
+     * @param callable $callable
+     * @return \MadeSimple\Validator\Validator
+     * @see \MadeSimple\Validator\Validator::setRuleMessage()
+     */
+    public function addRule(string $name, callable $callable)
+    {
+        $this->rules[$name] = $callable;
         return $this;
     }
 
@@ -66,7 +129,26 @@ class Validator
      */
     public function reset()
     {
-        $this->errors   = [];
+        // Remove all rules and messages
+        $this->rules = [];
+        $this->messages = ['rules' => [], 'custom' => []];
+        $this->clear();
+
+        // Add the initial rules and messages
+        Validate::addRuleSet($this);
+        $this->setLanguage($this->lang, $this->langDir);
+
+        return $this;
+    }
+
+    /**
+     * Clear the validator of all errors.
+     *
+     * @return Validator
+     */
+    public function clear()
+    {
+        $this->errors = [];
 
         return $this;
     }
@@ -89,11 +171,32 @@ class Validator
         $errors = [];
 
         foreach ($this->errors as $error) {
-            $errors[$error['attribute']][$error['rule']] = str_replace(
-                $error['search'],
-                $error['replace'],
-                null !== $error['message'] ? $error['message'] : ArrDots::get($this->messages, $error['type'])
-            );
+            // Process replacements
+            $message = ArrDots::get($this->messages['custom'], $error['attribute'])
+                       ?? ArrDots::get($this->messages['rules'], $error['rule']);
+            foreach ($error['replacements'] as $search => $replace) {
+                switch ($search[0]) {
+                    case ':':
+                        $message = str_replace($search, Str::prettyAttribute($replace), $message);
+                        break;
+                    case '!':
+                        if (!$replace) {
+                            break;
+                        }
+                        // Check if the attribute is singular (use group 1) or plural (use group 2)
+                        // Group 2 if plural, group 1 if singular
+                        $replace = substr($error['replacements'][':attribute'] ?? '', -1, 1) !== '*'
+                            ? '$1' : '$2';
+                        $message = preg_replace("/$search/", $replace, $message);
+                        break;
+
+                    case '%':
+                    default:
+                        $message = str_replace($search, $replace, $message);
+                        break;
+                }
+            }
+            $errors[$error['attribute']][$error['rule']] = $message;
         }
 
         return ['errors' => $errors];
@@ -103,13 +206,13 @@ class Validator
      * @param array|null|object $values
      * @param array             $ruleSet
      *
-     * @return void
+     * @return bool
      */
-    public function validate($values, array $ruleSet)
+    public function validate($values, array $ruleSet) : bool
     {
         // If there are no rules, there is nothing to validate
         if(empty($ruleSet)) {
-            return;
+            return true;
         }
 
         // For each pattern and its rules
@@ -121,34 +224,31 @@ class Validator
                 list($rule, $parameters) = array_pad(explode(':', $rule, 2), 2, '');
                 $parameters = array_map('trim', explode(',', $parameters));
 
-                if (Arr::exists($this->validators, $rule)) {
-                    call_user_func($this->validators[$rule], $values, $pattern, $rule, $parameters);
-                }
-                else if (method_exists($this, 'validate'.Str::dashesToCamel($rule))) {
-                    call_user_func([$this, 'validate'.Str::dashesToCamel($rule)], $values, $pattern, $rule, $parameters);
+                if (Arr::exists($this->rules, $rule)) {
+                    call_user_func($this->rules[$rule], $this, $values, $pattern, $rule, $parameters);
                 }
             }
         }
+
+        return $this->hasErrors();
     }
 
     /**
      * @param string      $attribute
      * @param string      $rule
      * @param array       $replacements
-     * @param null|string $type
-     * @param null|string $message
      */
-    protected function addError($attribute, $rule, $replacements = [], $type = null, $message = null)
+    public function addError($attribute, $rule, $replacements = [])
     {
-        $replacements = array_merge([':attribute' => Str::prettyAttribute($attribute)], $replacements);
+        $replacements = array_merge([
+            ':attribute'    => $attribute,
+            '!(\S+)\|(\S+)' => true,
+        ], $replacements ?? []);
 
         $this->errors[] = [
-            'attribute' => $attribute,
-            'rule'      => $rule,
-            'search'    => array_keys($replacements),
-            'replace'   => array_values($replacements),
-            'type'      => null === $type ? $rule : $type,
-            'message'   => $message
+            'attribute'    => $attribute,
+            'rule'         => $rule,
+            'replacements' => $replacements,
         ];
     }
 
@@ -158,7 +258,7 @@ class Validator
      *
      * @return \Generator
      */
-    protected function getValues(&$array, $pattern)
+    public static function getValues(&$array, $pattern)
     {
         foreach (ArrDots::search($array, $pattern, '*') as $attribute => $value) {
             yield $attribute => $value;
@@ -171,7 +271,7 @@ class Validator
      *
      * @return mixed|null First matching value or null
      */
-    protected function getValue(&$array, $pattern)
+    public static function getValue(&$array, $pattern)
     {
         $imploded = ArrDots::implode($array);
         $pattern  = sprintf('/^%s$/', str_replace('*', '[0-9]+', $pattern));
@@ -185,775 +285,5 @@ class Validator
         }
 
         return null;
-    }
-
-
-
-    /**
-     * present
-     *
-     * @param array  $data
-     * @param string $pattern
-     * @param string $rule
-     */
-    public function validatePresent($data, $pattern, $rule)
-    {
-        if (ArrDots::has($data, $pattern, '*')) {
-            return;
-        }
-
-        $this->addError($pattern, $rule);
-    }
-
-    /**
-     * required
-     *
-     * @param array  $data
-     * @param string $pattern
-     * @param string $rule
-     */
-    public function validateRequired($data, $pattern, $rule)
-    {
-        // Check pattern is present
-        if (!ArrDots::has($data, $pattern, '*')) {
-            $this->addError($pattern, $rule);
-        }
-
-        // Check value is not null
-        foreach ($this->getValues($data, $pattern) as $attribute => $value) {
-            if (null !== $value) {
-                continue;
-            }
-
-            $this->addError($attribute, $rule);
-        }
-    }
-
-    /**
-     * required-if:another-field(,value)+
-     *
-     * @param array  $data
-     * @param string $pattern
-     * @param string $rule
-     * @param array  $parameters
-     */
-    public function validateRequiredIf($data, $pattern, $rule, $parameters)
-    {
-        $field  = $parameters[0];
-        $values = array_slice($parameters, 1);
-
-        $required = false;
-        foreach ($this->getValues($data, $field) as $attribute => $value) {
-            $required = $required || in_array($value, $values);
-        }
-        if (!$required) {
-            return;
-        }
-
-
-        // Check pattern is present
-        if (!ArrDots::has($data, $pattern, '*')) {
-            $this->addError($pattern, $rule, [':field' => Str::prettyAttribute($field), ':value' => implode(',', $values)]);
-        }
-
-        // Check value is not null
-        foreach ($this->getValues($data, $pattern) as $attribute => $value) {
-            if (null !== $value) {
-                continue;
-            }
-
-            $this->addError($attribute, $rule, [':field' => Str::prettyAttribute($field), ':value' => implode(',', $values)]);
-        }
-    }
-
-    /**
-     * required-with:another-field
-     *
-     * @param array  $data
-     * @param string $pattern
-     * @param string $rule
-     * @param array  $parameters
-     */
-    public function validateRequiredWith($data, $pattern, $rule, $parameters)
-    {
-        $field   = $parameters[0];
-        $isWild  = strpos($field, '*') !== false;
-        $overlap = Str::overlapl($pattern, $field);
-
-        // Check that the pattern and field can be compared
-        if ($isWild && $overlap === false) {
-            throw new \InvalidArgumentException('Cannot match pattern to field');
-        }
-
-        // Check value is not null
-        foreach ($this->getValues($data, $pattern) as $attribute => $value) {
-            $fieldAttribute = $isWild ? Str::overlaplMerge($overlap, $attribute, $field) : $field;
-            $fieldValue     = ArrDots::get($data, $fieldAttribute);
-
-            if ($fieldValue === null) {
-                continue;
-            }
-            if ($fieldValue !== null && $value !== null) {
-                continue;
-            }
-
-            $this->addError($attribute, $rule, [':field' => Str::prettyAttribute($fieldAttribute)]);
-        }
-    }
-
-
-    /**
-     * equals:another-field
-     *
-     * @param array  $data
-     * @param string $pattern
-     * @param string $rule
-     * @param array  $parameters
-     */
-    public function validateEquals($data, $pattern, $rule, $parameters)
-    {
-        $field   = $parameters[0];
-        $isWild  = strpos($field, '*') !== false;
-        $overlap = Str::overlapl($pattern, $field);
-
-        // Check that the pattern and field can be compared
-        if ($isWild && $overlap === false) {
-            throw new \InvalidArgumentException('Cannot match pattern to field');
-        }
-
-        // Check values are equal
-        foreach ($this->getValues($data, $pattern) as $attribute => $value) {
-            $fieldAttribute = $isWild ? Str::overlaplMerge($overlap, $attribute, $field) : $field;
-            $fieldValue     = ArrDots::get($data, $fieldAttribute);
-
-            if ($fieldValue == $value) {
-                continue;
-            }
-
-            $this->addError($attribute, $rule, [':field' => Str::prettyAttribute($fieldAttribute)]);
-        }
-    }
-
-    /**
-     * not-equals:another-field
-     *
-     * @param array  $data
-     * @param string $pattern
-     * @param string $rule
-     * @param array  $parameters
-     */
-    public function validateNotEquals($data, $pattern, $rule, $parameters)
-    {
-        $field   = $parameters[0];
-        $isWild  = strpos($field, '*') !== false;
-        $overlap = Str::overlapl($pattern, $field);
-
-        // Check that the pattern and field can be compared
-        if ($isWild && $overlap === false) {
-            throw new \InvalidArgumentException('Cannot match pattern to field');
-        }
-
-        // Check values are equal
-        foreach ($this->getValues($data, $pattern) as $attribute => $value) {
-            $fieldAttribute = $isWild ? Str::overlaplMerge($overlap, $attribute, $field) : $field;
-            $fieldValue     = ArrDots::get($data, $fieldAttribute);
-
-            if ($fieldValue != $value) {
-                continue;
-            }
-
-            $this->addError($attribute, $rule, [':field' => Str::prettyAttribute($fieldAttribute)]);
-        }
-    }
-
-    /**
-     * identical:another-field
-     *
-     * @param array  $data
-     * @param string $pattern
-     * @param string $rule
-     * @param array  $parameters
-     */
-    public function validateIdentical($data, $pattern, $rule, $parameters)
-    {
-        $field   = $parameters[0];
-        $isWild  = strpos($field, '*') !== false;
-        $overlap = Str::overlapl($pattern, $field);
-
-        // Check that the pattern and field can be compared
-        if ($isWild && $overlap === false) {
-            throw new \InvalidArgumentException('Cannot match pattern to field');
-        }
-
-        // Check values are equal
-        foreach ($this->getValues($data, $pattern) as $attribute => $value) {
-            $fieldAttribute = $isWild ? Str::overlaplMerge($overlap, $attribute, $field) : $field;
-            $fieldValue     = ArrDots::get($data, $fieldAttribute);
-
-            if ($fieldValue === $value) {
-                continue;
-            }
-
-            $this->addError($attribute, $rule, [':field' => Str::prettyAttribute($fieldAttribute)]);
-        }
-    }
-
-    /**
-     * not-identical:another-field
-     *
-     * @param array  $data
-     * @param string $pattern
-     * @param string $rule
-     * @param array  $parameters
-     */
-    public function validateNotIdentical($data, $pattern, $rule, $parameters)
-    {
-        $field   = $parameters[0];
-        $isWild  = strpos($field, '*') !== false;
-        $overlap = Str::overlapl($pattern, $field);
-
-        // Check that the pattern and field can be compared
-        if ($isWild && $overlap === false) {
-            throw new \InvalidArgumentException('Cannot match pattern to field');
-        }
-
-        // Check values are equal
-        foreach ($this->getValues($data, $pattern) as $attribute => $value) {
-            $fieldAttribute = $isWild ? Str::overlaplMerge($overlap, $attribute, $field) : $field;
-            $fieldValue     = ArrDots::get($data, $fieldAttribute);
-
-            if ($fieldValue !== $value) {
-                continue;
-            }
-
-            $this->addError($attribute, $rule, [':field' => Str::prettyAttribute($fieldAttribute)]);
-        }
-    }
-
-
-    /**
-     * in:<value>(,<value>)*
-     *
-     * @param array  $data
-     * @param string $pattern
-     * @param string $rule
-     * @param array  $parameters
-     */
-    public function validateIn($data, $pattern, $rule, $parameters)
-    {
-        foreach ($this->getValues($data, $pattern) as $attribute => $value) {
-            if (null === $value) {
-                continue;
-            }
-            if (in_array($value, $parameters)) {
-                continue;
-            }
-
-            $this->addError($attribute, $rule, [':values' => implode(', ', $parameters)]);
-        }
-    }
-
-    /**
-     * not-in:<value>(,<value>)*
-     *
-     * @param array  $data
-     * @param string $pattern
-     * @param string $rule
-     * @param array  $parameters
-     */
-    public function validateNotIn($data, $pattern, $rule, $parameters)
-    {
-        foreach ($this->getValues($data, $pattern) as $attribute => $value) {
-            if (null === $value) {
-                continue;
-            }
-            if (!in_array($value, $parameters)) {
-                continue;
-            }
-
-            $this->addError($attribute, $rule, [':values' => implode(', ', $parameters)]);
-        }
-    }
-
-    /**
-     * contains-only:<value>(,<value>)*
-     *
-     * @param array  $data
-     * @param string $pattern
-     * @param string $rule
-     * @param array  $parameters
-     */
-    public function validateContainsOnly($data, $pattern, $rule, $parameters)
-    {
-        foreach ($this->getValues($data, $pattern) as $attribute => $value) {
-            if (null === $value || empty($value)) {
-                continue;
-            }
-            if (count($value) == count(array_intersect($value, $parameters))) {
-                continue;
-            }
-
-            $this->addError($attribute, $rule, [':values' => implode(', ', $parameters)]);
-        }
-    }
-
-    /**
-     * min-arr-count:<minimum_value>
-     *
-     * @param array  $data
-     * @param string $pattern
-     * @param string $rule
-     * @param array  $parameters
-     */
-    public function validateMinArrCount($data, $pattern, $rule, $parameters)
-    {
-        $min = $parameters[0];
-
-        foreach ($this->getValues($data, $pattern) as $attribute2 => $value) {
-            if (null === $value) {
-                continue;
-            }
-
-            if (count($value) >= $min) {
-                break;
-            }
-
-            $this->addError($attribute2, $rule, [':min' => $min], $rule);
-        }
-    }
-
-    /**
-     * max-arr-count:<minimum_value>
-     *
-     * @param array  $data
-     * @param string $pattern
-     * @param string $rule
-     * @param array  $parameters
-     */
-    public function validateMaxArrCount($data, $pattern, $rule, $parameters)
-    {
-        $max = $parameters[0];
-
-        foreach ($this->getValues($data, $pattern) as $attribute2 => $value) {
-            if (null === $value) {
-                continue;
-            }
-
-            if (count($value) <= $max) {
-                break;
-            }
-
-            $this->addError($attribute2, $rule, [':max' => $max], $rule);
-        }
-    }
-
-
-    /**
-     * min:<minimum-value>
-     *
-     * @param array  $data
-     * @param string $pattern
-     * @param string $rule
-     * @param array  $parameters
-     */
-    public function validateMin($data, $pattern, $rule, $parameters)
-    {
-        $min = $parameters[0];
-
-        foreach ($this->getValues($data, $pattern) as $attribute2 => $value) {
-            if (null === $value || ($value != '0' && empty($value))) {
-                continue;
-            }
-
-            if ($value >= $min) {
-                break;
-            }
-
-            $this->addError($attribute2, $rule, [':min' => $min], $rule);
-        }
-    }
-
-    /**
-     * max:<minimum_value>
-     *
-     * @param array  $data
-     * @param string $pattern
-     * @param string $rule
-     * @param array  $parameters
-     */
-    public function validateMax($data, $pattern, $rule, $parameters)
-    {
-        $max = $parameters[0];
-
-        foreach ($this->getValues($data, $pattern) as $attribute2 => $value) {
-            if (null === $value || ($value != '0' && empty($value))) {
-                continue;
-            }
-
-            if ($value <= $max) {
-                break;
-            }
-
-            $this->addError($attribute2, $rule, [':max' => $max], $rule);
-        }
-    }
-
-    /**
-     * greater-than:<another_field>
-     *
-     * @param array  $data
-     * @param string $pattern
-     * @param string $rule
-     * @param array  $parameters
-     */
-    public function validateGreaterThan($data, $pattern, $rule, $parameters)
-    {
-        $lowerBound = $this->getValue($data, $parameters[0]);
-        if (null === $lowerBound) {
-            return;
-        }
-        foreach ($this->getValues($data, $pattern) as $attribute => $value) {
-            if (null === $value || empty($value)) {
-                continue;
-            }
-            if ($value > $lowerBound) {
-                continue;
-            }
-            $this->addError($attribute, $rule, [':value' => $value]);
-        }
-    }
-
-    /**
-     * less-than:<another_field>
-     *
-     * @param array  $data
-     * @param string $pattern
-     * @param string $rule
-     * @param array  $parameters
-     */
-    public function validateLessThan($data, $pattern, $rule, $parameters)
-    {
-        $upperBound = $this->getValue($data, $parameters[0]);
-        if (null === $upperBound) {
-            return;
-        }
-        foreach ($this->getValues($data, $pattern) as $attribute => $value) {
-            if (null === $value || empty($value)) {
-                continue;
-            }
-            if ($value < $upperBound) {
-                continue;
-            }
-
-            $this->addError($attribute, $rule, [':value' => $value]);
-        }
-    }
-
-
-    /**
-     * alpha
-     *
-     * @param array  $data
-     * @param string $pattern
-     * @param string $rule
-     */
-    public function validateAlpha($data, $pattern, $rule)
-    {
-        foreach ($this->getValues($data, $pattern) as $attribute => $value) {
-            if (null === $value || empty($value)) {
-                continue;
-            }
-            if (preg_match('/^([a-zÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÒÓÔÕÖßÙÚÛÜÝàáâãäåçèéêëìíîïðòóôõöùúûüýÿ])+$/i', $value) === 1) {
-                continue;
-            }
-
-            $this->addError($attribute, $rule);
-        }
-    }
-
-    /**
-     * alpha-numeric
-     *
-     * @param array  $data
-     * @param string $pattern
-     * @param string $rule
-     */
-    public function validateAlphaNumeric($data, $pattern, $rule)
-    {
-        foreach ($this->getValues($data, $pattern) as $attribute => $value) {
-            if (null === $value || empty($value)) {
-                continue;
-            }
-            if (preg_match('/^([a-z0-9ÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÒÓÔÕÖßÙÚÛÜÝàáâãäåçèéêëìíîïðòóôõöùúûüýÿ])+$/i', $value) === 1) {
-                continue;
-            }
-
-            $this->addError($attribute, $rule);
-        }
-    }
-
-    /**
-     * min-str-len:<minimum_value>
-     *
-     * @param array  $data
-     * @param string $pattern
-     * @param string $rule
-     * @param array  $parameters
-     */
-    public function validateMinStrLen($data, $pattern, $rule, $parameters)
-    {
-        $min = $parameters[0];
-
-        foreach ($this->getValues($data, $pattern) as $attribute2 => $value) {
-            if (null === $value || empty($value)) {
-                continue;
-            }
-
-            if (strlen($value) >= $min) {
-                break;
-            }
-
-            $this->addError($attribute2, $rule, [':min' => $min], $rule);
-        }
-    }
-
-    /**
-     * max-str-len:<minimum_value>
-     *
-     * @param array  $data
-     * @param string $pattern
-     * @param string $rule
-     * @param array  $parameters
-     */
-    public function validateMaxStrLen($data, $pattern, $rule, $parameters)
-    {
-        $max = $parameters[0];
-
-        foreach ($this->getValues($data, $pattern) as $attribute2 => $value) {
-            if (null === $value || empty($value)) {
-                continue;
-            }
-
-            if (strlen($value) <= $max) {
-                break;
-            }
-
-            $this->addError($attribute2, $rule, [':max' => $max], $rule);
-        }
-    }
-
-    /**
-     * str-len:<exact-length>
-     *
-     * @param array  $data
-     * @param string $pattern
-     * @param string $rule
-     * @param array  $parameters
-     */
-    public function validateStrLen($data, $pattern, $rule, $parameters)
-    {
-        $length = $parameters[0];
-
-        foreach ($this->getValues($data, $pattern) as $attribute => $value) {
-            if (null === $value || empty($value)) {
-                continue;
-            }
-            if (strlen($value) === (int) $length) {
-                continue;
-            }
-
-            $this->addError($attribute, $rule, [':length' => $length], 'length');
-        }
-    }
-
-    /**
-     * human-name
-     *
-     * @param array  $data
-     * @param string $pattern
-     * @param string $rule
-     */
-    public function validateHumanName($data, $pattern, $rule)
-    {
-        foreach ($this->getValues($data, $pattern) as $attribute => $value) {
-            if (null === $value || empty($value)) {
-                continue;
-            }
-            if (preg_match('/^([a-zÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÒÓÔÕÖßÙÚÛÜÝàáâãäåçèéêëìíîïðòóôõöùúûüýÿ \'-])+$/i', $value) === 1) {
-                continue;
-            }
-
-            $this->addError($attribute, $rule);
-        }
-    }
-
-
-    /**
-     * is:<type>
-     *
-     * @param array  $data
-     * @param string $pattern
-     * @param string $rule
-     * @param array  $parameters
-     */
-    public function validateIs($data, $pattern, $rule, $parameters)
-    {
-        $is_a_func = sprintf('is_%s', $parameters[0]);
-        if (!function_exists($is_a_func)) {
-            return;
-        }
-
-        foreach ($this->getValues($data, $pattern) as $attribute => $value) {
-            // As "is:<type>" is validating value type only ignore null
-            if (null === $value) {
-                continue;
-            }
-            if (call_user_func($is_a_func, $value)) {
-                continue;
-            }
-
-            $this->addError($attribute, $rule, [':type' => $parameters[0]], 'is');
-        }
-    }
-
-
-    /**
-     * email
-     *
-     * @param array  $data
-     * @param string $pattern
-     * @param string $rule
-     */
-    public function validateEmail($data, $pattern, $rule)
-    {
-        foreach ($this->getValues($data, $pattern) as $attribute => $value) {
-            if (null === $value || empty($value)) {
-                continue;
-            }
-            if (false !== filter_var($value, FILTER_VALIDATE_EMAIL)) {
-                continue;
-            }
-
-            $this->addError($attribute, $rule);
-        }
-    }
-
-    /**
-     * date:(format)?
-     *
-     * @link http://php.net/manual/en/datetime.createfromformat.php
-     *
-     * @param array  $data
-     * @param string $pattern
-     * @param string $rule
-     * @param array  $parameters
-     */
-    public function validateDate($data, $pattern, $rule, $parameters)
-    {
-        $format = !empty($parameters[0]) ? $parameters[0] : 'Y-m-d';
-        foreach ($this->getValues($data, $pattern) as $attribute => $value) {
-            if (null === $value || empty($value)) {
-                continue;
-            }
-            $d = \DateTime::createFromFormat($format, $value);
-            if ($d && $d->format($format) == $value) {
-                continue;
-            }
-
-            $this->addError($attribute, $rule, [':format' => $format]);
-        }
-    }
-
-    /**
-     * url
-     *
-     * @param array  $data
-     * @param string $pattern
-     * @param string $rule
-     */
-    public function validateUrl($data, $pattern, $rule)
-    {
-        foreach ($this->getValues($data, $pattern) as $attribute => $value) {
-            if (null === $value || empty($value)) {
-                continue;
-            }
-            if (false !== filter_var($value, FILTER_VALIDATE_URL)) {
-                continue;
-            }
-
-            $this->addError($attribute, $rule);
-        }
-    }
-
-    /**
-     * uuid
-     *
-     * @param array  $data
-     * @param string $pattern
-     * @param string $rule
-     */
-    public function validateUuid($data, $pattern, $rule)
-    {
-        $uuidPattern = '/^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$/';
-
-        foreach ($this->getValues($data, $pattern) as $attribute => $value) {
-            if (null === $value || empty($value)) {
-                continue;
-            }
-            if (1 === preg_match($uuidPattern, $value)) {
-                continue;
-            }
-
-            $this->addError($attribute, $rule);
-        }
-    }
-
-
-    /**
-     * card-number
-     *
-     * @see http://stackoverflow.com/questions/174730/what-is-the-best-way-to-validate-a-credit-card-in-php
-     *
-     * @param array  $data
-     * @param string $pattern
-     * @param string $rule
-     */
-    public function validateCardNumber($data, $pattern, $rule)
-    {
-        foreach ($this->getValues($data, $pattern) as $attribute => $value) {
-            if (null === $value || empty($value)) {
-                continue;
-            }
-
-            // Strip any non-digits (useful for credit card numbers with spaces and hyphens)
-            $number = preg_replace('/\D/', '', $value);
-
-            // Set the string length and parity
-            $numberLength = strlen($number);
-            $parity       = $numberLength % 2;
-
-            // Loop through each digit and do the maths
-            $total = 0;
-            for ($i = 0; $i < $numberLength; $i++) {
-                $digit = $number[$i];
-                // Multiply alternate digits by two
-                if ($i % 2 == $parity) {
-                    $digit *= 2;
-                    // If the sum is two digits, add them together (in effect)
-                    if ($digit > 9) {
-                        $digit -= 9;
-                    }
-                }
-                // Total up the digits
-                $total += $digit;
-            }
-
-            // If the total mod 10 equals 0, the number is valid
-            if ($total % 10 == 0) {
-                continue;
-            }
-
-            $this->addError($attribute, $rule);
-        }
     }
 }
