@@ -7,44 +7,68 @@ use PHPUnit\Framework\TestCase;
 
 class StrTest extends TestCase
 {
-    public function testDashesToCamel()
+    /**
+     * @param string $expected
+     * @param string $attribute
+     * @dataProvider prettyAttributeProvider
+     */
+    public function testPrettyAttribute($expected, $attribute)
     {
-        $this->assertEquals('Foo', Str::dashesToCamel('foo'));
-        $this->assertEquals('FooBar', Str::dashesToCamel('foo-bar'));
-        $this->assertEquals('FooBarBaz', Str::dashesToCamel('foo-bar-baz'));
+        $this->assertEquals($expected, Str::prettyAttribute($attribute));
+    }
+    public function prettyAttributeProvider()
+    {
+        return [
+            ['Foo', 'foo'],
+            ['Foo bar', 'foo.bar'],
+            ['Foo bar', 'foo.*.bar'],
+            ['Foo bar baz', 'foo.bar.baz'],
+            ['Foo bar baz', 'foo.*.bar.*.baz'],
+        ];
     }
 
-    public function testPrettyAttribute()
+    /**
+     * @param string $expected
+     * @param string $a
+     * @param string $b
+     * @dataProvider overlapLeftProvider
+     */
+    public function testOverlapLeft($expected, $a, $b)
     {
-        $this->assertEquals('Foo', Str::prettyAttribute('foo'));
-        $this->assertEquals('Foo bar', Str::prettyAttribute('foo.bar'));
-        $this->assertEquals('Foo bar', Str::prettyAttribute('foo.*.bar'));
-        $this->assertEquals('Foo bar baz', Str::prettyAttribute('foo.bar.baz'));
-        $this->assertEquals('Foo bar baz', Str::prettyAttribute('foo.*.bar.*.baz'));
+        $this->assertEquals($expected, Str::overlapLeft($a, $b));
+    }
+    public function overlapLeftProvider()
+    {
+        return [
+            ['foo.*', 'foo.*.bar', 'foo.*.baz'],
+            ['foo.*', 'foo.*.baz', 'foo.*.bar'],
+            ['*', '*.alpha', '*.beta'],
+
+            [false, 'foo.*.bar', 'username'],
+            [false, 'username', 'foo.*.bar'],
+            [false, 'field', 'fields.*'],
+            [false, 'field', 'fields'],
+        ];
     }
 
-    public function testStrposX()
+    /**
+     * @param string $pattern
+     * @param string $attribute
+     * @param string $field
+     * @param string $expected
+     * @dataProvider leftOverlapMergeProvider
+     */
+    public function testOverlapLeftMerge($pattern, $attribute, $field, $expected)
     {
-        $this->assertEquals(3, Str::strposX('foo.*.bar', '.'));
-        $this->assertEquals(5, Str::strposX('foo.*.bar', '.', 2));
-        $this->assertFalse(Str::strposX('foo.*.bar', '.', 3));
+        $overlap = Str::overlapLeft($pattern, $field);
+
+        $this->assertEquals($expected, Str::overlapLeftMerge($overlap, $attribute, $field));
     }
-
-    public function testOverlapl()
+    public function leftOverlapMergeProvider()
     {
-        $this->assertEquals('foo.*.ba', Str::overlapl('foo.*.bar', 'foo.*.baz'));
-        $this->assertEquals('foo.*.ba', Str::overlapl('foo.*.baz', 'foo.*.bar'));
-        $this->assertFalse(Str::overlapl('foo.*.bar', 'username'));
-        $this->assertFalse(Str::overlapl('username', 'foo.*.bar'));
-    }
-
-    public function testLoverlaplMerge()
-    {
-        $pattern   = 'foo.*.bar';
-        $field     = 'foo.*.baz';
-        $attribute = 'foo.0.bar';
-        $overlap   = Str::overlapl($pattern, $field);
-
-        $this->assertEquals('foo.0.baz', Str::overlaplMerge($overlap, $attribute, $field));
+        return [
+            ['foo.*.bar', 'foo.0.bar', 'foo.*.baz', 'foo.0.baz'],
+            ['*.alpha', '15.alpha', '*.beta', '15.beta'],
+        ];
     }
 }
