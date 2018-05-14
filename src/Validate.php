@@ -152,7 +152,7 @@ class Validate
         }
 
         // If the required with field exists and the pattern field does not
-        if (ArrDots::has($data, $field) && !ArrDots::has($data, $pattern, '*')) {
+        if (ArrDots::has($data, $field, '*') && !ArrDots::has($data, $pattern, '*')) {
             $validator->addError($pattern, $rule, [':field' => Str::prettyAttribute($field)]);
         }
 
