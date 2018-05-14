@@ -34,33 +34,6 @@ class Str
     }
 
     /**
-     * Find the position of the Nth occurrence of a substring in a string.
-     *
-     * @param string $haystack
-     * @param string $needle
-     * @param int    $number
-     *
-     * @return bool|int
-     */
-    public static function strposX(string $haystack, string $needle, int $number = 1)
-    {
-        if ($number <= 0) {
-            throw new \InvalidArgumentException('Number must be >= 1');
-        }
-
-        if ($number === 1) {
-            return strpos($haystack, $needle);
-        }
-
-        $position = static::strposX($haystack, $needle, $number - 1);
-        if ($position === false) {
-            return false;
-        }
-
-        return strpos($haystack, $needle, $position + 1);
-    }
-
-    /**
      * @param string $a
      * @param string $b
      *
@@ -68,20 +41,19 @@ class Str
      */
     public static function overlapl(string $a, string $b)
     {
-        // overlapl failed if $b is an empty string
         if (empty($b)) {
             return false;
         }
 
-        // If $a or $b are pure substrings of the other
-        if (strpos($a, $b) === 0) {
+        if ($a === $b) {
             return $b;
         }
-        if (strpos($b, $a) === 0) {
-            return $a;
-        }
 
-        return static::overlapl($a, substr($b, 0, -1));
+        if (substr_count($a, '.') > substr_count($b, '.')) {
+            return static::overlapl(substr($a, 0, strrpos($a, '.')), $b);
+        } else {
+            return static::overlapl($a, substr($b, 0, strrpos($b, '.')));
+        }
     }
 
     /**
@@ -95,11 +67,13 @@ class Str
      */
     public static function overlaplMerge($overlap, $attribute, $field)
     {
-        if (($number = substr_count($overlap, '.')) === 0) {
-            return false;
-        }
+        $overlap   = explode('.', $overlap);
+        $attribute = explode('.', $attribute);
+        $field     = explode('.', $field);
 
-        return substr($attribute, 0, static::strposX($attribute, '.', $number)) .
-            substr($field, static::strposX($field, '.', $number));
+        for ($i=0; $i<count($overlap); $i++) {
+            $field[$i] = $attribute[$i];
+        }
+        return implode('.', $field);
     }
 }

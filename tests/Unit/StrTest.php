@@ -23,17 +23,10 @@ class StrTest extends TestCase
         $this->assertEquals('Foo bar baz', Str::prettyAttribute('foo.*.bar.*.baz'));
     }
 
-    public function testStrposX()
-    {
-        $this->assertEquals(3, Str::strposX('foo.*.bar', '.'));
-        $this->assertEquals(5, Str::strposX('foo.*.bar', '.', 2));
-        $this->assertFalse(Str::strposX('foo.*.bar', '.', 3));
-    }
-
     public function testOverlapl()
     {
-        $this->assertEquals('foo.*.ba', Str::overlapl('foo.*.bar', 'foo.*.baz'));
-        $this->assertEquals('foo.*.ba', Str::overlapl('foo.*.baz', 'foo.*.bar'));
+        $this->assertEquals('foo.*', Str::overlapl('foo.*.bar', 'foo.*.baz'));
+        $this->assertEquals('foo.*', Str::overlapl('foo.*.baz', 'foo.*.bar'));
         $this->assertFalse(Str::overlapl('foo.*.bar', 'username'));
         $this->assertFalse(Str::overlapl('username', 'foo.*.bar'));
     }
