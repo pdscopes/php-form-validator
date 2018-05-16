@@ -4,7 +4,7 @@
     "type": "library",
     "require": {
         "php": ">=7.0",
-        "madesimple/php-arrays": ">=1.1"
+        "madesimple/php-arrays": "^2.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^6.3"

@@ -260,7 +260,7 @@ class Validator
      */
     public static function getValues(&$array, $pattern)
     {
-        foreach (ArrDots::search($array, $pattern, '*') as $attribute => $value) {
+        foreach (ArrDots::collate($array, $pattern, '*') as $attribute => $value) {
             yield $attribute => $value;
         }
     }
