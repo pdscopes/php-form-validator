@@ -2,11 +2,57 @@
 
 namespace MadeSimple\Validator\Test\Integration;
 
+use MadeSimple\Validator\Validate;
 use PHPUnit\Framework\TestCase;
 
 class ValidateRequiredWithTest extends TestCase
 {
     use ValidateTrait;
+
+    /**
+     * @expectedException \InvalidArgumentException
+     * @expectedExceptionMessage Cannot match pattern () to field (*)
+     */
+    public function testValidateRequiredWithNonMatchedPattern()
+    {
+        Validate::requiredWith($this->validator, [], '', '', ['*']);
+    }
+
+    /**
+     * @expectedException \InvalidArgumentException
+     * @expectedExceptionMessage Cannot match pattern () to field (*)
+     */
+    public function testEqualsWithNonMatchedPattern()
+    {
+        Validate::equals($this->validator, [], '', '', ['*']);
+    }
+
+    /**
+     * @expectedException \InvalidArgumentException
+     * @expectedExceptionMessage Cannot match pattern to field
+     */
+    public function testNotEqualsWithNonMatchedPattern()
+    {
+        Validate::notEquals($this->validator, [], '', '', ['*']);
+    }
+
+    /**
+     * @expectedException \InvalidArgumentException
+     * @expectedExceptionMessage Cannot match pattern to field
+     */
+    public function testIdenticalWithNonMatchedPattern()
+    {
+        Validate::identical($this->validator, [], '', '', ['*']);
+    }
+
+    /**
+     * @expectedException \InvalidArgumentException
+     * @expectedExceptionMessage Cannot match pattern to field
+     */
+    public function testNotIdenticalWithNonMatchedPattern()
+    {
+        Validate::notIdentical($this->validator, [], '', '', ['*']);
+    }
 
     public function testValidateRequiredWithValidTrue()
     {
