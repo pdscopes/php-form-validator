@@ -106,28 +106,28 @@ class Validate
     {
         $field  = $parameters[0];
         $values = array_slice($parameters, 1);
-
-        $required = false;
-        foreach (Validator::getValues($data, $field) as $attribute => $value) {
-            $required = $required || in_array($value, $values);
-        }
-        if (!$required) {
-            return;
-        }
-
+        $isWild  = strpos($field, '*') !== false;
+        $overlap = Str::overlapLeft($field, $pattern);
 
         // Check pattern is present
         if (!ArrDots::has($data, $pattern, '*')) {
-            $validator->addError($pattern, $rule, [':field' => Str::prettyAttribute($field), '%value' => implode(',', $values)]);
+            $validator->addError($pattern, $rule, [':field' => $field, '%value' => implode(',', $values)]);
         }
 
         // Check value is not null
         foreach (Validator::getValues($data, $pattern) as $attribute => $value) {
+            $fieldAttribute = $isWild ? Str::overlapLeftMerge($overlap, $attribute, $field) : $field;
+            $fieldValue     = ArrDots::get($data, $fieldAttribute);
+
+            if ($fieldValue === null || !in_array($fieldValue, $values)) {
+                continue;
+            }
+
             if (null !== $value) {
                 continue;
             }
 
-            $validator->addError($attribute, $rule, [':field' => Str::prettyAttribute($field), '%value' => implode(',', $values)]);
+            $validator->addError($attribute, $rule, [':field' => $fieldAttribute, '%value' => implode(',', $values)]);
         }
     }
 
@@ -153,7 +153,7 @@ class Validate
 
         // If the required with field exists and the pattern field does not
         if (ArrDots::has($data, $field, '*') && !ArrDots::has($data, $pattern, '*')) {
-            $validator->addError($pattern, $rule, [':field' => Str::prettyAttribute($field)]);
+            $validator->addError($pattern, $rule, [':field' => $field]);
         }
 
         // Check value is not null
@@ -168,7 +168,7 @@ class Validate
                 continue;
             }
 
-            $validator->addError($attribute, $rule, [':field' => Str::prettyAttribute($fieldAttribute)]);
+            $validator->addError($attribute, $rule, [':field' => $fieldAttribute]);
         }
     }
 
@@ -202,7 +202,7 @@ class Validate
                 continue;
             }
 
-            $validator->addError($attribute, $rule, [':field' => Str::prettyAttribute($fieldAttribute)]);
+            $validator->addError($attribute, $rule, [':field' => $fieldAttribute]);
         }
     }
 
@@ -235,7 +235,7 @@ class Validate
                 continue;
             }
 
-            $validator->addError($attribute, $rule, [':field' => Str::prettyAttribute($fieldAttribute)]);
+            $validator->addError($attribute, $rule, [':field' => $fieldAttribute]);
         }
     }
 
@@ -268,7 +268,7 @@ class Validate
                 continue;
             }
 
-            $validator->addError($attribute, $rule, [':field' => Str::prettyAttribute($fieldAttribute)]);
+            $validator->addError($attribute, $rule, [':field' => $fieldAttribute]);
         }
     }
 
@@ -301,7 +301,7 @@ class Validate
                 continue;
             }
 
-            $validator->addError($attribute, $rule, [':field' => Str::prettyAttribute($fieldAttribute)]);
+            $validator->addError($attribute, $rule, [':field' => $fieldAttribute]);
         }
     }
 
