@@ -109,9 +109,17 @@ class Validate
         $isWild  = strpos($field, '*') !== false;
         $overlap = Str::overlapLeft($field, $pattern);
 
-        // Check pattern is present
+        // If pattern is not present
         if (!ArrDots::has($data, $pattern, '*')) {
-            $validator->addError($pattern, $rule, [':field' => $field, '%value' => implode(',', $values)]);
+            foreach (Validator::getValues($data, $field) as $fieldAttribute => $fieldValue) {
+                if (null === $fieldValue || !in_array($fieldValue, $values)) {
+                    continue;
+                }
+
+                $attribute = $isWild ? Str::overlapLeftMerge($overlap, $fieldAttribute, $pattern) : $pattern;
+                $validator->addError($attribute, $rule, [':field' => $fieldAttribute, '%value' => implode(',', $values)]);
+            }
+            return;
         }
 
         // Check value is not null
