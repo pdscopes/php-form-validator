@@ -30,6 +30,11 @@ class ValidatorTest extends TestCase
         $this->assertEquals($errors, $this->validator->getProcessedErrors());
     }
 
+    public function testValidateOnEmptyRuleSet()
+    {
+        $this->assertTrue($this->validator->validate(null, []));
+    }
+
     public function testPluralAttribute()
     {
         $rules  = [
@@ -52,6 +57,13 @@ class ValidatorTest extends TestCase
         $this->assertEquals($errors, $this->validator->getProcessedErrors());
     }
 
+    public function testGetValueShouldReturnNull()
+    {
+        $array = [];
+
+        $this->assertNull($this->validator->getValue($array, '[0-9]'));
+    }
+
     /**
      * @param string $attribute
      * @param string $message
@@ -72,6 +84,16 @@ class ValidatorTest extends TestCase
         $this->assertTrue($this->validator->hasErrors());
         $this->assertEquals($errors, $this->validator->getProcessedErrors());
     }
+
+    /**
+     * @expectedException \InvalidArgumentException
+     * @expectedExceptionMessage No such file: invalid_lang_diren.php
+     */
+    public function testSetLanguageOnInvalidLanguageDir()
+    {
+        $this->validator->setLanguage('en', 'invalid_lang_dir');
+    }
+
     public function customAttributeMessageProvider()
     {
         return [
