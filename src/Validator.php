@@ -241,28 +241,30 @@ class Validator
     {
         $field  = $parameters[0];
         $values = array_slice($parameters, 1);
-
-        $required = false;
-        foreach ($this->getValues($data, $field) as $attribute => $value) {
-            $required = $required || in_array($value, $values);
-        }
-        if (!$required) {
+        $isWild  = strpos($field, '*') !== false;
+        $overlap = Str::overlapl($field, $pattern);
+        // If pattern is not present
+        if (!ArrDots::has($data, $pattern, '*')) {
+            foreach (Validator::getValues($data, $field) as $fieldAttribute => $fieldValue) {
+                if (null === $fieldValue || !in_array($fieldValue, $values)) {
+                    continue;
+                }
+                $attribute = $isWild ? Str::overlaplMerge($overlap, $fieldAttribute, $pattern) : $pattern;
+                $this->addError($attribute, $rule, [':field' => $fieldAttribute, '%value' => implode(',', $values)]);
+            }
             return;
         }
-
-
-        // Check pattern is present
-        if (!ArrDots::has($data, $pattern, '*')) {
-            $this->addError($pattern, $rule, [':field' => Str::prettyAttribute($field), ':value' => implode(',', $values)]);
-        }
-
         // Check value is not null
-        foreach ($this->getValues($data, $pattern) as $attribute => $value) {
+        foreach (Validator::getValues($data, $pattern) as $attribute => $value) {
+            $fieldAttribute = $isWild ? Str::overlaplMerge($overlap, $attribute, $field) : $field;
+            $fieldValue     = ArrDots::get($data, $fieldAttribute);
+            if ($fieldValue === null || !in_array($fieldValue, $values)) {
+                continue;
+            }
             if (null !== $value) {
                 continue;
             }
-
-            $this->addError($attribute, $rule, [':field' => Str::prettyAttribute($field), ':value' => implode(',', $values)]);
+            $this->addError($attribute, $rule, [':field' => $fieldAttribute, '%value' => implode(',', $values)]);
         }
     }
 
