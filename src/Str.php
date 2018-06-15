@@ -13,7 +13,7 @@ class Str
      */
     public static function prettyAttribute($atr)
     {
-        return ucfirst(str_replace(['.*', '.'], ['', ' '], $atr));
+        return ucfirst(str_replace(['.*', '.', '_'], ['', ' ', ' '], $atr));
     }
 
     /**
