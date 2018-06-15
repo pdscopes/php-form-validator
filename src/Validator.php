@@ -7,6 +7,8 @@ use MadeSimple\Arrays\ArrDots;
 
 class Validator
 {
+    const WILD = '*';
+
     /**
      * @var string
      */
@@ -185,7 +187,7 @@ class Validator
                         }
                         // Check if the attribute is singular (use group 1) or plural (use group 2)
                         // Group 2 if plural, group 1 if singular
-                        $replace = substr($error['replacements'][':attribute'] ?? '', -1, 1) !== '*'
+                        $replace = substr($error['replacements'][':attribute'] ?? '', -1, 1) !== static::WILD
                             ? '$1' : '$2';
                         $message = preg_replace("/$search/", $replace, $message);
                         break;
@@ -260,7 +262,7 @@ class Validator
      */
     public static function getValues(&$array, $pattern)
     {
-        foreach (ArrDots::collate($array, $pattern, '*') as $attribute => $value) {
+        foreach (ArrDots::collate($array, $pattern, static::WILD) as $attribute => $value) {
             yield $attribute => $value;
         }
     }
@@ -274,7 +276,7 @@ class Validator
     public static function getValue(&$array, $pattern)
     {
         $imploded = ArrDots::implode($array);
-        $pattern  = sprintf('/^%s$/', str_replace('*', '[0-9]+', $pattern));
+        $pattern  = sprintf('/^%s$/', str_replace(static::WILD, '[0-9]+', $pattern));
 
         foreach ($imploded as $attribute => $value) {
             if (preg_match($pattern, $attribute) == 0) {
