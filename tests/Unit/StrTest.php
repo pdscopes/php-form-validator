@@ -24,6 +24,8 @@ class StrTest extends TestCase
             ['Foo bar', 'foo.*.bar'],
             ['Foo bar baz', 'foo.bar.baz'],
             ['Foo bar baz', 'foo.*.bar.*.baz'],
+            ['Foo bar', 'foo_bar'],
+            ['Foo bar baz', 'foo_bar_baz'],
         ];
     }
 
