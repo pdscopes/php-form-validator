@@ -139,6 +139,36 @@ $rules = [
 $validator->validate($_POST, $rules);
 ```
 
+Another example, if you wanted to do a complex validation of a sub-array:
+
+```php
+// Add the rule to the validator
+$validator = new Validator;
+$validator->addRule('complex', function (Validator $validator, array $data, $pattern, $rule, $array $parameters) {
+    foreach ($validator->getValues($data, $pattern as $attribute => $value) {
+        if (null === $value) {
+            continue;
+        }
+        $rules['type'] = 'in:alpha,beta';
+        switch ($value['type']) {
+            case 'alpha':
+                $rules['shared_field'] = 'is:int';
+                $rules['alpha_specific_field'] = 'is:int';
+                break;
+
+            case 'beta':
+                $rules['shared_field'] = 'in:blue,green';
+                $rules['beta_specific_field'] = 'is:int';
+                break;
+        }
+
+        // Apply the type specific rules to this part of the data
+        $validator->validate($value, $rules, $attribute);
+    }
+});
+// No need to define a rule message as only sub-rules can generate errors
+```
+
 
 ## Validation Rules
 ### Present

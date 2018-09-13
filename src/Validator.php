@@ -35,6 +35,11 @@ class Validator
     protected $errors;
 
     /**
+     * @var string
+     */
+    protected $prefix = '';
+
+    /**
      * Validator constructor.
      *
      * @param string $lang
@@ -207,14 +212,18 @@ class Validator
     /**
      * @param array|null|object $values
      * @param array             $ruleSet
+     * @param string|null       $prefix
      *
      * @return bool
      */
-    public function validate($values, array $ruleSet) : bool
+    public function validate($values, array $ruleSet, string $prefix = null) : bool
     {
         // If there are no rules, there is nothing to validate
         if(empty($ruleSet)) {
             return true;
+        }
+        if ($prefix !== null) {
+            $this->prefix = $prefix . '.';
         }
 
         // For each pattern and its rules
@@ -231,6 +240,7 @@ class Validator
                 }
             }
         }
+        $this->prefix = '';
 
         return $this->hasErrors();
     }
@@ -243,12 +253,12 @@ class Validator
     public function addError($attribute, $rule, $replacements = [])
     {
         $replacements = array_merge([
-            ':attribute'    => $attribute,
+            ':attribute'    => $this->prefix . $attribute,
             '!(\S+)\|(\S+)' => true,
         ], $replacements ?? []);
 
         $this->errors[] = [
-            'attribute'    => $attribute,
+            'attribute'    => $this->prefix . $attribute,
             'rule'         => $rule,
             'replacements' => $replacements,
         ];
