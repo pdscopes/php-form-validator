@@ -6,6 +6,8 @@ return function (\MadeSimple\Validator\Validator $validator) {
         ->setRuleMessage('required', ':attribute !is|are required')
         ->setRuleMessage('required-if', ':attribute !is|are required if :field equals %value')
         ->setRuleMessage('required-with', ':attribute !is|are required when :field is present')
+        ->setRuleMessage('required-with-all', ':attribute !is|are required')
+        ->setRuleMessage('required-with-any', ':attribute !is|are required')
 
         ->setRuleMessage('equals', ':attribute must equal :field')
         ->setRuleMessage('not-equals', ':attribute must not equal :field')

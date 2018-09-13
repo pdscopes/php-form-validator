@@ -16,6 +16,8 @@ class Validate
             ->addRule('required', [static::class, 'required'])
             ->addRule('required-if', [static::class, 'requiredIf'])
             ->addRule('required-with', [static::class, 'requiredWith'])
+            ->addRule('required-with-all', [static::class, 'requiredWithAll'])
+            ->addRule('required-with-any', [static::class, 'requiredWithAny'])
 
             ->addRule('equals', [static::class, 'equals'])
             ->addRule('not-equals', [static::class, 'notEquals'])
@@ -177,6 +179,142 @@ class Validate
             }
 
             $validator->addError($attribute, $rule, [':field' => $fieldAttribute]);
+        }
+    }
+
+    /**
+     * required-with-all:another-field(,another-field)*
+     *
+     * @param \MadeSimple\Validator\Validator $validator
+     * @param array $data
+     * @param string $pattern
+     * @param string $rule
+     * @param array  $parameters
+     */
+    public static function requiredWithAll(Validator $validator, $data, $pattern, $rule, $parameters)
+    {
+        // Find the overlaps and if the fields are wild
+        $overlaps = [];
+        $longest  = 0;
+        foreach ($parameters as $k => $field) {
+            $isWild       = strpos($field, $validator::WILD) !== false;
+            $overlaps[$k] = $isWild ? Str::overlapLeft($field, $pattern) : null;
+            if ($isWild && $overlaps[$k] === false) {
+                throw new \InvalidArgumentException('Cannot match pattern ('.$pattern.') to field ('.$field.')');
+            }
+            // Store the longest overlap
+            $longest = $isWild && strlen($overlaps[$k]) > strlen($overlaps[$longest]) ? $k : $longest;
+        }
+
+        // If the pattern field does not exist
+        if (!ArrDots::has($data, $pattern, $validator::WILD)) {
+            // Check that all "required with" fields are present and not null
+            $required = false;
+            foreach (Validator::getValues($data, $parameters[$longest]) as $attribute => $value) {
+                $required = true;
+                foreach ($parameters as $k => $field) {
+                    $fieldAttribute = $overlaps[$k] ? Str::overlapLeftMerge($overlaps[$k], $attribute, $field) : $field;
+                    $fieldValue     = ArrDots::get($data, $fieldAttribute);
+                    $required       = $required && $fieldValue !== null;
+                    if (!$required) {
+                        break;
+                    }
+                }
+                if ($required) {
+                    break;
+                }
+            }
+
+            if ($required) {
+                $validator->addError($pattern, $rule);
+            }
+            return;
+        }
+
+
+
+        // Check value is required and not null
+        foreach (Validator::getValues($data, $pattern) as $attribute => $value) {
+            // Check that all "required with" fields are present and not null
+            $required = true;
+            foreach ($parameters as $k => $field) {
+                $fieldAttribute = $overlaps[$k] ? Str::overlapLeftMerge($overlaps[$k], $attribute, $field) : $field;
+                $fieldValue     = ArrDots::get($data, $fieldAttribute);
+                $required       = $required && $fieldValue !== null;
+                if (!$required) {
+                    break;
+                }
+            }
+
+            // If required and value is null
+            if ($required && $value === null) {
+                $validator->addError($pattern, $rule);
+            }
+        }
+    }
+
+    /**
+     * required-with-any:another-field(,another-field)*
+     *
+     * @param \MadeSimple\Validator\Validator $validator
+     * @param array $data
+     * @param string $pattern
+     * @param string $rule
+     * @param array  $parameters
+     */
+    public static function requiredWithAny(Validator $validator, $data, $pattern, $rule, $parameters)
+    {
+        // Find the overlaps and if the fields are wild
+        $overlaps = [];
+        $longest  = 0;
+        foreach ($parameters as $k => $field) {
+            $isWild       = strpos($field, $validator::WILD) !== false;
+            $overlaps[$k] = $isWild ? Str::overlapLeft($field, $pattern) : null;
+            if ($isWild && $overlaps[$k] === false) {
+                throw new \InvalidArgumentException('Cannot match pattern ('.$pattern.') to field ('.$field.')');
+            }
+            // Store the longest overlap
+            $longest = $isWild && strlen($overlaps[$k]) > strlen($overlaps[$longest]) ? $k : $longest;
+        }
+
+        // If the pattern field does not exist
+        if (!ArrDots::has($data, $pattern, $validator::WILD)) {
+            // Check that any "required with" fields are present and not null
+            $required = array_reduce($parameters, function ($required, $field) use ($validator, $data) {
+                if (!$required && ArrDots::has($data, $field, $validator::WILD)) {
+                    foreach (Validator::getValues($data, $field) as $value) {
+                        $required = $required || $value !== null;
+                    }
+
+                }
+                return $required;
+            }, false);
+
+            if ($required) {
+                $validator->addError($pattern, $rule);
+            }
+            return;
+        }
+
+
+
+        // Check value is required and not null
+        foreach (Validator::getValues($data, $pattern) as $attribute => $value) {
+            // Check that any "required with" fields are present and not null
+            $required = false;
+            foreach ($parameters as $k => $field) {
+                $fieldAttribute = $overlaps[$k] ? Str::overlapLeftMerge($overlaps[$k], $attribute, $field) : $field;
+                $fieldValue     = ArrDots::get($data, $fieldAttribute);
+                $required       = $required || $fieldValue !== null;
+                if ($required) {
+                    break;
+                }
+            }
+
+            // If required and value is null
+            if ($required && $value === null) {
+                $validator->addError($pattern, $rule);
+            }
         }
     }
 
