@@ -48,6 +48,7 @@ The following are all the validation rules that this library provides:
 | [Requried With](###required-with)         | `required-with`     | `field`           | The field is required if the other field is not `null`. |
 | [Requried With All](###required-with-all) | `required-with-all` | `field(,field)*`  | The field is required if all of the other fields are not `null`. |
 | [Requried With Any](###required-with-any) | `required-with-any` | `field(,field)*`  | The field is required if any of the other fields are not `null`. |
+| [Requried Without](###required-without)   | `required-without`  | `field`           | The field is required if the other field is `null`. |
 | [Equals](###equals)                       | `equals`            | `field`           | The field's value must equals the other specified field's value. |
 | [Not Equals](###not-equals)               | `not-equals`        | `field`           | The field's value must not equal the other specified field's value. |
 | [Identical](###identical)                 | `identical`         | `field`           | The field's value must be identical the other specified field's value. |
@@ -230,6 +231,16 @@ $rulesSet = [
     'field0' => 'required-with-any:field1,field2',
     'field1' => 'is:int'
     'field2' => 'in:alpha,beta'
+];
+```
+
+### Required Without
+The field is required if the other field is `null`.
+```php
+// Example Usage
+$rulesSet = [
+    'field0' => 'required-without:field1',
+    'field1' => 'required-without:field0'
 ];
 ```
 

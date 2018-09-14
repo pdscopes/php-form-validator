@@ -18,6 +18,7 @@ class Validate
             ->addRule('required-with', [static::class, 'requiredWith'])
             ->addRule('required-with-all', [static::class, 'requiredWithAll'])
             ->addRule('required-with-any', [static::class, 'requiredWithAny'])
+            ->addRule('required-without', [static::class, 'requiredWithout'])
 
             ->addRule('equals', [static::class, 'equals'])
             ->addRule('not-equals', [static::class, 'notEquals'])
@@ -315,6 +316,47 @@ class Validate
             if ($required && $value === null) {
                 $validator->addError($pattern, $rule);
             }
+        }
+    }
+
+    /**
+     * required-without:another-field
+     *
+     * @param \MadeSimple\Validator\Validator $validator
+     * @param array $data
+     * @param string $pattern
+     * @param string $rule
+     * @param array  $parameters
+     */
+    public static function requiredWithout(Validator $validator, $data, $pattern, $rule, $parameters)
+    {
+        $field   = $parameters[0];
+        $isWild  = strpos($field, $validator::WILD) !== false;
+        $overlap = Str::overlapLeft($field, $pattern);
+
+        // Check that the pattern and field can be compared
+        if ($isWild && $overlap === false) {
+            throw new \InvalidArgumentException('Cannot match pattern ('.$pattern.') to field ('.$field.')');
+        }
+
+        // If the required with field exists and the pattern field does not
+        if (!ArrDots::has($data, $field, $validator::WILD) && !ArrDots::has($data, $pattern, $validator::WILD)) {
+            $validator->addError($pattern, $rule, [':field' => $field]);
+        }
+
+        // Check value is not null
+        foreach (Validator::getValues($data, $pattern) as $attribute => $value) {
+            if ($value !== null) {
+                continue;
+            }
+
+            $fieldAttribute = $isWild ? Str::overlapLeftMerge($overlap, $attribute, $field) : $field;
+            $fieldValue     = ArrDots::get($data, $fieldAttribute);
+            if ($fieldValue !== null) {
+                continue;
+            }
+
+            $validator->addError($attribute, $rule, [':field' => $fieldAttribute]);
         }
     }
 
