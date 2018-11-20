@@ -223,7 +223,7 @@ class Validator
             return true;
         }
         if ($prefix !== null) {
-            $this->prefix = $prefix . '.';
+            $this->prefix .= $prefix . '.';
         }
 
         // For each pattern and its rules
