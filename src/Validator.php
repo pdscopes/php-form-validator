@@ -222,6 +222,7 @@ class Validator
         if(empty($ruleSet)) {
             return true;
         }
+        $currentPrefix = $this->prefix;
         if ($prefix !== null) {
             $this->prefix .= $prefix . '.';
         }
@@ -240,7 +241,7 @@ class Validator
                 }
             }
         }
-        $this->prefix = '';
+        $this->prefix = $currentPrefix;
 
         return $this->hasErrors();
     }
