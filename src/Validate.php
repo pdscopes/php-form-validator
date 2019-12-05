@@ -4,6 +4,13 @@ namespace MadeSimple\Validator;
 
 use MadeSimple\Arrays\ArrDots;
 
+// Add polyfill in case where running in < PHP 7.3
+if (!function_exists('is_countable')) {
+    function is_countable($var) {
+        return (is_array($var) || $var instanceof Countable);
+    }
+}
+
 class Validate
 {
     /**
