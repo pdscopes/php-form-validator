@@ -555,7 +555,7 @@ class Validate
             if (null === $value || empty($value)) {
                 continue;
             }
-            if (count($value) == count(array_intersect($value, $parameters))) {
+            if (is_countable($value) && count($value) == count(array_intersect($value, $parameters))) {
                 continue;
             }
 
@@ -581,7 +581,7 @@ class Validate
                 continue;
             }
 
-            if (count($value) >= $min) {
+            if (is_countable($value) && count($value) >= $min) {
                 break;
             }
 
@@ -607,7 +607,7 @@ class Validate
                 continue;
             }
 
-            if (count($value) <= $max) {
+            if (is_countable($value) && count($value) <= $max) {
                 break;
             }
 
