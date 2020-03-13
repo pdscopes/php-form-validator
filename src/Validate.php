@@ -990,7 +990,7 @@ class Validate
             if (null === $value || empty($value)) {
                 continue;
             }
-            if (1 === preg_match($uuidPattern, $value)) {
+            if (is_string($value) && 1 === preg_match($uuidPattern, $value)) {
                 continue;
             }
 
