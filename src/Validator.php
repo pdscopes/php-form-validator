@@ -243,7 +243,7 @@ class Validator
         }
         $this->prefix = $currentPrefix;
 
-        return $this->hasErrors();
+        return !$this->hasErrors();
     }
 
     /**
