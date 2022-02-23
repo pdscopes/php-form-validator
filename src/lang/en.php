@@ -4,7 +4,7 @@ return function (\MadeSimple\Validator\Validator $validator) {
     $validator
         ->setRuleMessage('present', ':attribute must be present')
         ->setRuleMessage('required', ':attribute !is|are required')
-        ->setRuleMessage('required-if', ':attribute !is|are required if :field equals %value')
+        ->setRuleMessage('required-if', ':attribute !is|are required if :field equals :value')
         ->setRuleMessage('required-with', ':attribute !is|are required when :field is present')
         ->setRuleMessage('required-with-all', ':attribute !is|are required')
         ->setRuleMessage('required-with-any', ':attribute !is|are required')
@@ -15,9 +15,10 @@ return function (\MadeSimple\Validator\Validator $validator) {
         ->setRuleMessage('identical', ':attribute must be identical to :field')
         ->setRuleMessage('not-identical', ':attribute must not be identical to :field')
 
-        ->setRuleMessage('in', ':attribute must be one of: %values')
-        ->setRuleMessage('not-in', ':attribute must not be one of: %values')
-        ->setRuleMessage('contains-only', ':attribute must only contain: %values')
+        ->setRuleMessage('in', ':attribute must be one of: :values')
+        ->setRuleMessage('not-in', ':attribute must not be one of: :values')
+        ->setRuleMessage('contains', ':attribute must contain: :values')
+        ->setRuleMessage('contains-only', ':attribute must only contain: :values')
         ->setRuleMessage('min-arr-count', ':attribute must contain at least :min item(s)')
         ->setRuleMessage('max-arr-count', ':attribute must contain at most :max item(s)')
 
@@ -30,7 +31,7 @@ return function (\MadeSimple\Validator\Validator $validator) {
         ->setRuleMessage('alpha-numeric', ':attribute must only contain alpha-numeric characters')
         ->setRuleMessage('min-str-len', ':attribute must be at least :min character(s) long')
         ->setRuleMessage('max-str-len', ':attribute must be at most :max character(s) long')
-        ->setRuleMessage('str-len', ':attribute must be exactly %value long')
+        ->setRuleMessage('str-len', ':attribute must be exactly :value long')
         ->setRuleMessage('human-name', ':attribute must be a valid name')
 
         ->setRuleMessage('is', ':attribute must be a type of :type')

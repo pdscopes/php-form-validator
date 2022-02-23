@@ -34,6 +34,7 @@ class Validate
 
             ->addRule('in', [static::class, 'in'])
             ->addRule('not-in', [static::class, 'notIn'])
+            ->addRule('contains', [static::class, 'contains'])
             ->addRule('contains-only', [static::class, 'containsOnly'])
             ->addRule('min-arr-count', [static::class, 'minArrCount'])
             ->addRule('max-arr-count', [static::class, 'maxArrCount'])
@@ -127,7 +128,7 @@ class Validate
                 }
 
                 $attribute = $isWild ? Str::overlapLeftMerge($overlap, $fieldAttribute, $pattern) : $pattern;
-                $validator->addError($attribute, $rule, [':field' => $fieldAttribute, '%value' => implode(',', $values)]);
+                $validator->addError($attribute, $rule, [':field' => $fieldAttribute, ':value' => implode(',', $values)]);
             }
             return;
         }
@@ -145,7 +146,7 @@ class Validate
                 continue;
             }
 
-            $validator->addError($attribute, $rule, [':field' => $fieldAttribute, '%value' => implode(',', $values)]);
+            $validator->addError($attribute, $rule, [':field' => $fieldAttribute, ':value' => implode(',', $values)]);
         }
     }
 
@@ -520,7 +521,7 @@ class Validate
                 continue;
             }
 
-            $validator->addError($attribute, $rule, ['%values' => implode(', ', $parameters)]);
+            $validator->addError($attribute, $rule, [':values' => implode(', ', $parameters)]);
         }
     }
 
@@ -543,7 +544,30 @@ class Validate
                 continue;
             }
 
-            $validator->addError($attribute, $rule, ['%values' => implode(', ', $parameters)]);
+            $validator->addError($attribute, $rule, [':values' => implode(', ', $parameters)]);
+        }
+    }
+
+    /**
+     * contains:<value>(,<value>)*
+     *
+     * @param \MadeSimple\Validator\Validator $validator
+     * @param array $data
+     * @param string $pattern
+     * @param string $rule
+     * @param array  $parameters
+     */
+    public static function contains(Validator $validator, $data, $pattern, $rule, $parameters)
+    {
+        foreach (Validator::getValues($data, $pattern) as $attribute => $value) {
+            if (null === $value || empty($value)) {
+                continue;
+            }
+            if (is_countable($value) && count($parameters) == count(array_intersect($value, $parameters))) {
+                continue;
+            }
+
+            $validator->addError($attribute, $rule, [':values' => implode(', ', $parameters)]);
         }
     }
 
