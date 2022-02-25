@@ -304,6 +304,15 @@ $rulesSet = [
 ];
 ```
 
+### Contains
+The field should be an array and must contain all the specified options (may contain other values not listed).
+```php
+// Example Usage
+$rulesSet = [
+    'field' => 'contains:apple,pear,orange'
+];
+```
+
 ### Contains Only
 The field should be an array and must contain only the specified options.
 ```php
