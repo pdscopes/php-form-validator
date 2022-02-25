@@ -1,5 +1,5 @@
 # php-form-validator
-[![Build Status](https://travis-ci.org/pdscopes/php-form-validator.svg?branch=master)](https://travis-ci.org/pdscopes/php-form-validator)
+[![PHPUnit](https://github.com/pdscopes/php-form-validator/actions/workflows/phpunit.yml/badge.svg)](https://github.com/pdscopes/php-form-validator/actions/workflows/phpunit.yml)
 
 Simple, extendable form validator for multi-dimensional forms
 
