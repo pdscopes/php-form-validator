@@ -9,12 +9,10 @@ class ValidateRequiredWithAnyTest extends TestCase
 {
     use ValidateTrait;
 
-    /**
-     * @expectedException \InvalidArgumentException
-     * @expectedExceptionMessage Cannot match pattern () to field (*)
-     */
     public function testValidateRequiredWithNonMatchedPattern()
     {
+        $this->expectExceptionMessage("Cannot match pattern () to field (*)");
+        $this->expectException(\InvalidArgumentException::class);
         Validate::requiredWithAll($this->validator, [], '', '', ['*']);
     }
 
