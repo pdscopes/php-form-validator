@@ -549,7 +549,7 @@ class Validate
     }
 
     /**
-     * contains-only:<value>(,<value>)*
+     * contains:<value>(,<value>)*
      *
      * @param \MadeSimple\Validator\Validator $validator
      * @param array $data
