@@ -25,5 +25,14 @@
         "psr-4": {
             "MadeSimple\\Validator\\Test\\": "tests/"
         }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit"
+    },
+    "scripts-descriptions": {
+        "test": "Run unit and integration tests"
     }
 }
