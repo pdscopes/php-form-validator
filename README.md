@@ -83,7 +83,7 @@ The following are all the validation rules that this library provides:
 | [Maximum String Length](#max-string-length) | `max-str-len`       | `int`            | The field should be a string and must have a `strlen` of at most the specified value.                          |
 | [String Length](#string-length)             | `str-len`           | `int`            | The field should be a string and must have a `strlen` of exactly the specified value.                          |
 | [Human Name](#human-name)                   | `human-name`        |                  | The field must be a valid human name.                                                                          |
-| [Is: ...](#is-...)                          | `is`                | `type`           | The field must be of the specified basic PHP type. There must be a corresponding `is_<type>` method.           |
+| [Is: ...](#is-)                             | `is`                | `type`           | The field must be of the specified basic PHP type. There must be a corresponding `is_<type>` method.           |
 | [Email](#email)                             | `email`             |                  | The field must be a valid email address                                                                        |
 | [Date](#date)                               | `date`              | `(format)?`      | The field must be a valid date in the specified format (defaults to `'Y-m-d'`).                                |
 | [URL](#url)                                 | `url`               |                  | The field must be a valid URL.                                                                                 |
