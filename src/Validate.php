@@ -34,6 +34,7 @@ class Validate
 
             ->addRule('in', [static::class, 'in'])
             ->addRule('not-in', [static::class, 'notIn'])
+            ->addRule('contains', [static::class, 'contains'])
             ->addRule('contains-only', [static::class, 'containsOnly'])
             ->addRule('min-arr-count', [static::class, 'minArrCount'])
             ->addRule('max-arr-count', [static::class, 'maxArrCount'])
@@ -95,7 +96,7 @@ class Validate
 
         // Check value is not null
         foreach (Validator::getValues($data, $pattern) as $attribute => $value) {
-            if (null !== $value) {
+            if (!empty($value)) {
                 continue;
             }
 
@@ -544,6 +545,29 @@ class Validate
             }
 
             $validator->addError($attribute, $rule, ['%values' => implode(', ', $parameters)]);
+        }
+    }
+
+    /**
+     * contains-only:<value>(,<value>)*
+     *
+     * @param \MadeSimple\Validator\Validator $validator
+     * @param array $data
+     * @param string $pattern
+     * @param string $rule
+     * @param array  $parameters
+     */
+    public static function contains(Validator $validator, $data, $pattern, $rule, $parameters)
+    {
+        foreach (Validator::getValues($data, $pattern) as $attribute => $value) {
+            if (null === $value || empty($value)) {
+                continue;
+            }
+            if (is_countable($value) && count($parameters) == count(array_intersect($value, $parameters))) {
+                continue;
+            }
+
+            $validator->addError($attribute, $rule, [':values' => implode(', ', $parameters)]);
         }
     }
 

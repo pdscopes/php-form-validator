@@ -17,6 +17,7 @@ return function (\MadeSimple\Validator\Validator $validator) {
 
         ->setRuleMessage('in', ':attribute must be one of: %values')
         ->setRuleMessage('not-in', ':attribute must not be one of: %values')
+        ->setRuleMessage('contains', ':attribute must contain: %values')
         ->setRuleMessage('contains-only', ':attribute must only contain: %values')
         ->setRuleMessage('min-arr-count', ':attribute must contain at least :min item(s)')
         ->setRuleMessage('max-arr-count', ':attribute must contain at most :max item(s)')
