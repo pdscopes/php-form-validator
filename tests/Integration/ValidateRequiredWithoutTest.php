@@ -9,12 +9,10 @@ class ValidateRequiredWithoutTest extends TestCase
 {
     use ValidateTrait;
 
-    /**
-     * @expectedException \InvalidArgumentException
-     * @expectedExceptionMessage Cannot match pattern () to field (*)
-     */
     public function testValidateRequiredWithoutNonMatchedPattern()
     {
+        $this->expectExceptionMessage("Cannot match pattern () to field (*)");
+        $this->expectException(\InvalidArgumentException::class);
         Validate::requiredWithout($this->validator, [], '', '', ['*']);
     }
 
