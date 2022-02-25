@@ -3,6 +3,20 @@
 
 Simple, extendable form validator for multi-dimensional forms
 
+## Installation
+PHP Form Validator is available on [Packagist](https://packagist.org/packages/madesimple/php-form-validator) (using semantic versioning), and installation via [Composer](https://getcomposer.org) is the recommended way to install.
+Just add this line to your `composer.json` file:
+
+```json
+"madesimple/php-form-validator": "^2.7"
+```
+
+or run
+
+```shell
+composer require madesimple/php-form-validator
+```
+
 ## Validation Rules
 Validation rules are an associative array of dot notation field names
 in the input array to a pipe separated string of rules. The asterisk, `*`,
@@ -41,7 +55,7 @@ $input = [
 The following are all the validation rules that this library provides:
 
 | Rule Name                                 | Keyword             | Parameters        | Desciption |
-|:----------------------------------------- |:------------------- |:----------------- |:---------- |
+|:------------------------------------------|:--------------------|:----------------- |:---------- |
 | [Present](###present)                     | `present`           |                   | The field must be present but can have any value including `null`. |
 | [Required](###required)                   | `required`          |                   | The field must be present and cannot be `null` (can be an empty string). |
 | [Required If](###required-if)             | `required-if`       | `field(,value)+`  | The field is required if the specified field(s) and the specified value(s). |
@@ -55,6 +69,7 @@ The following are all the validation rules that this library provides:
 | [Not Identical](###not-identical)         | `not-identical`     | `field`           | The field's value must not be identical the other specified field's value. |
 | [In](###in)                               | `in`                | `value(,value)*`  | The field must equal one of the specified options. |
 | [Not In](###not-in)                       | `not-in`            | `value(,value)*`  | The field must not equal one of the specified options. |
+| [Contains](###contains)                   | `contains`          | `value(,value)*`  | The field should be an array and must contain all the specified options (may contain other values not listed). |
 | [Contains Only](###contains-only)         | `contains-only`     | `value(,value)*`  | The field should be an array and must contain only the specified options. |
 | [Minimum Array Count](###min-arr-count)   | `min-arr-count`     | `int`             | The field should be an array and must have an `array_count` of at least the specified value. |
 | [Maximum Array Count](###max-arr-count)   | `max-arr-count`     | `int`             | The field should be an array and must have an `array_count` of at most the specified value. |
