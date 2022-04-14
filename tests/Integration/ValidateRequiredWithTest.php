@@ -9,48 +9,38 @@ class ValidateRequiredWithTest extends TestCase
 {
     use ValidateTrait;
 
-    /**
-     * @expectedException \InvalidArgumentException
-     * @expectedExceptionMessage Cannot match pattern () to field (*)
-     */
     public function testValidateRequiredWithNonMatchedPattern()
     {
+        $this->expectExceptionMessage("Cannot match pattern () to field (*)");
+        $this->expectException(\InvalidArgumentException::class);
         Validate::requiredWith($this->validator, [], '', '', ['*']);
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     * @expectedExceptionMessage Cannot match pattern () to field (*)
-     */
     public function testEqualsWithNonMatchedPattern()
     {
+        $this->expectExceptionMessage("Cannot match pattern () to field (*)");
+        $this->expectException(\InvalidArgumentException::class);
         Validate::equals($this->validator, [], '', '', ['*']);
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     * @expectedExceptionMessage Cannot match pattern to field
-     */
     public function testNotEqualsWithNonMatchedPattern()
     {
+        $this->expectExceptionMessage("Cannot match pattern to field");
+        $this->expectException(\InvalidArgumentException::class);
         Validate::notEquals($this->validator, [], '', '', ['*']);
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     * @expectedExceptionMessage Cannot match pattern to field
-     */
     public function testIdenticalWithNonMatchedPattern()
     {
+        $this->expectExceptionMessage("Cannot match pattern to field");
+        $this->expectException(\InvalidArgumentException::class);
         Validate::identical($this->validator, [], '', '', ['*']);
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     * @expectedExceptionMessage Cannot match pattern to field
-     */
     public function testNotIdenticalWithNonMatchedPattern()
     {
+        $this->expectExceptionMessage("Cannot match pattern to field");
+        $this->expectException(\InvalidArgumentException::class);
         Validate::notIdentical($this->validator, [], '', '', ['*']);
     }
 

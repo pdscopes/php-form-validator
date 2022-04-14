@@ -85,12 +85,10 @@ class ValidatorTest extends TestCase
         $this->assertEquals($errors, $this->validator->getProcessedErrors());
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     * @expectedExceptionMessage No such file: invalid_lang_diren.php
-     */
     public function testSetLanguageOnInvalidLanguageDir()
     {
+        $this->expectExceptionMessage("No such file: invalid_lang_diren.php");
+        $this->expectException(\InvalidArgumentException::class);
         $this->validator->setLanguage('en', 'invalid_lang_dir');
     }
 

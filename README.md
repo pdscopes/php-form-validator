@@ -1,7 +1,21 @@
 # php-form-validator
-[![Build Status](https://travis-ci.org/pdscopes/php-form-validator.svg?branch=master)](https://travis-ci.org/pdscopes/php-form-validator)
+[![PHPUnit](https://github.com/pdscopes/php-form-validator/actions/workflows/phpunit.yml/badge.svg)](https://github.com/pdscopes/php-form-validator/actions/workflows/phpunit.yml)
 
 Simple, extendable form validator for multi-dimensional forms
+
+## Installation
+PHP Form Validator is available on [Packagist](https://packagist.org/packages/madesimple/php-form-validator) (using semantic versioning), and installation via [Composer](https://getcomposer.org) is the recommended way to install.
+Just add this line to your `composer.json` file:
+
+```
+"madesimple/php-form-validator": "^2.7"
+```
+
+or run:
+
+```shell
+composer require madesimple/php-form-validator
+```
 
 ## Validation Rules
 Validation rules are an associative array of dot notation field names
@@ -40,40 +54,41 @@ $input = [
 
 The following are all the validation rules that this library provides:
 
-| Rule Name                                 | Keyword             | Parameters        | Desciption |
-|:----------------------------------------- |:------------------- |:----------------- |:---------- |
-| [Present](###present)                     | `present`           |                   | The field must be present but can have any value including `null`. |
-| [Required](###required)                   | `required`          |                   | The field must be present and cannot be `null` (can be an empty string). |
-| [Required If](###required-if)             | `required-if`       | `field(,value)+`  | The field is required if the specified field(s) and the specified value(s). |
-| [Requried With](###required-with)         | `required-with`     | `field`           | The field is required if the other field is not `null`. |
-| [Requried With All](###required-with-all) | `required-with-all` | `field(,field)*`  | The field is required if all of the other fields are not `null`. |
-| [Requried With Any](###required-with-any) | `required-with-any` | `field(,field)*`  | The field is required if any of the other fields are not `null`. |
-| [Requried Without](###required-without)   | `required-without`  | `field`           | The field is required if the other field is `null`. |
-| [Equals](###equals)                       | `equals`            | `field`           | The field's value must equals the other specified field's value. |
-| [Not Equals](###not-equals)               | `not-equals`        | `field`           | The field's value must not equal the other specified field's value. |
-| [Identical](###identical)                 | `identical`         | `field`           | The field's value must be identical the other specified field's value. |
-| [Not Identical](###not-identical)         | `not-identical`     | `field`           | The field's value must not be identical the other specified field's value. |
-| [In](###in)                               | `in`                | `value(,value)*`  | The field must equal one of the specified options. |
-| [Not In](###not-in)                       | `not-in`            | `value(,value)*`  | The field must not equal one of the specified options. |
-| [Contains Only](###contains-only)         | `contains-only`     | `value(,value)*`  | The field should be an array and must contain only the specified options. |
-| [Minimum Array Count](###min-arr-count)   | `min-arr-count`     | `int`             | The field should be an array and must have an `array_count` of at least the specified value. |
-| [Maximum Array Count](###max-arr-count)   | `max-arr-count`     | `int`             | The field should be an array and must have an `array_count` of at most the specified value. |
-| [Minimum](###min)                         | `min`               | `int`             | The field should be numeric and must be at least the specified value. |
-| [Maximum](###max)                         | `max`               | `int`             | The field should be numeric and must be at most the specified value. |
-| [Greater Than](###greater-than)           | `greater-than`      | `field`           | The field should be numeric and must have a value greater than the other field. |
-| [Less Than](###less-than)                 | `less-than`         | `field`           | The field should be numeric and must have a value less than the other field. |
-| [Alpha](###alpha)                         | `alpha`             |                   | The field must only contain alphabetic characters. |
-| [Alpha Numeric](###alpha-numeric)         | `alpha-numeric`     |                   | The field must only contain alphabetic and numerical characters. |
-| [Minimum String Length](###min-str-len)   | `min-str-len`       | `int`             | The field should be string and must have a `strlen` of at least the specified value. |
-| [Maximum String Length](###max-str-len)   | `max-str-len`       | `int`             | The field should be a string and must have a `strlen` of at most the specified value. |
-| [String Length](###str-len)               | `str-len`           | `int`             | The field should be a string and must have a `strlen` of exactly the specified value. |
-| [Human Name](###human-name)               | `human-name`        |                   | The field must be a valid human name. |
-| [Is: ...](###is)                          | `is`                | `type`            | The field must be of the specified basic PHP type. There must be a corresponding `is_<type>` method. |
-| [Email](###email)                         | `email`             |                   | The field must be a valid email address |
-| [Date](###date)                           | `date`              | `(format)?`       | The field must be a valid date in the specified format (defaults to `'Y-m-d'`). |
-| [URL](###url)                             | `url`               |                   | The field must be a valid URL. |
-| [UUID](###uuid)                           | `uuid`              |                   | The field must be a valid UUID (\universally unique identifier). |
-| [Card Number](###card-number)             | `card-number`       |                   | The field must be a valid card number. |
+| Rule Name                                   | Keyword             | Parameters       | Description                                                                                                    |
+|:--------------------------------------------|:--------------------|:-----------------|:---------------------------------------------------------------------------------------------------------------|
+| [Present](#present)                         | `present`           |                  | The field must be present but can have any value including `null`.                                             |
+| [Required](#required)                       | `required`          |                  | The field must be present and cannot be `null` (can be an empty string).                                       |
+| [Required If](#required-if)                 | `required-if`       | `field(,value)+` | The field is required if the specified field(s) and the specified value(s).                                    |
+| [Required With](#required-with)             | `required-with`     | `field`          | The field is required if the other field is not `null`.                                                        |
+| [Required With All](#required-with-all)     | `required-with-all` | `field(,field)*` | The field is required if all of the other fields are not `null`.                                               |
+| [Required With Any](#required-with-any)     | `required-with-any` | `field(,field)*` | The field is required if any of the other fields are not `null`.                                               |
+| [Required Without](#required-without)       | `required-without`  | `field`          | The field is required if the other field is `null`.                                                            |
+| [Equals](#equals)                           | `equals`            | `field`          | The field's value must equals the other specified field's value.                                               |
+| [Not Equals](#not-equals)                   | `not-equals`        | `field`          | The field's value must not equal the other specified field's value.                                            |
+| [Identical](#identical)                     | `identical`         | `field`          | The field's value must be identical the other specified field's value.                                         |
+| [Not Identical](#not-identical)             | `not-identical`     | `field`          | The field's value must not be identical the other specified field's value.                                     |
+| [In](#in)                                   | `in`                | `value(,value)*` | The field must equal one of the specified options.                                                             |
+| [Not In](#not-in)                           | `not-in`            | `value(,value)*` | The field must not equal one of the specified options.                                                         |
+| [Contains](#contains)                       | `contains`          | `value(,value)*` | The field should be an array and must contain all the specified options (may contain other values not listed). |
+| [Contains Only](#contains-only)             | `contains-only`     | `value(,value)*` | The field should be an array and must contain only the specified options.                                      |
+| [Minimum Array Count](#min-array-count)     | `min-arr-count`     | `int`            | The field should be an array and must have an `array_count` of at least the specified value.                   |
+| [Maximum Array Count](#max-array-count)     | `max-arr-count`     | `int`            | The field should be an array and must have an `array_count` of at most the specified value.                    |
+| [Minimum](#min)                             | `min`               | `int`            | The field should be numeric and must be at least the specified value.                                          |
+| [Maximum](#max)                             | `max`               | `int`            | The field should be numeric and must be at most the specified value.                                           |
+| [Greater Than](#greater-than)               | `greater-than`      | `field`          | The field should be numeric and must have a value greater than the other field.                                |
+| [Less Than](#less-than)                     | `less-than`         | `field`          | The field should be numeric and must have a value less than the other field.                                   |
+| [Alpha](#alpha)                             | `alpha`             |                  | The field must only contain alphabetic characters.                                                             |
+| [Alpha Numeric](#alpha-numeric)             | `alpha-numeric`     |                  | The field must only contain alphabetic and numerical characters.                                               |
+| [Minimum String Length](#min-string-length) | `min-str-len`       | `int`            | The field should be string and must have a `strlen` of at least the specified value.                           |
+| [Maximum String Length](#max-string-length) | `max-str-len`       | `int`            | The field should be a string and must have a `strlen` of at most the specified value.                          |
+| [String Length](#string-length)             | `str-len`           | `int`            | The field should be a string and must have a `strlen` of exactly the specified value.                          |
+| [Human Name](#human-name)                   | `human-name`        |                  | The field must be a valid human name.                                                                          |
+| [Is: ...](#is-)                             | `is`                | `type`           | The field must be of the specified basic PHP type. There must be a corresponding `is_<type>` method.           |
+| [Email](#email)                             | `email`             |                  | The field must be a valid email address                                                                        |
+| [Date](#date)                               | `date`              | `(format)?`      | The field must be a valid date in the specified format (defaults to `'Y-m-d'`).                                |
+| [URL](#url)                                 | `url`               |                  | The field must be a valid URL.                                                                                 |
+| [UUID](#uuid)                               | `uuid`              |                  | The field must be a valid UUID (\universally unique identifier).                                               |
+| [Card Number](#card-number)                 | `card-number`       |                  | The field must be a valid card number.                                                                         |
 
 ## Adding Extra Rules
 Extra rules can be added to the validator to extend its functionality to provide specific rules for your project.
@@ -213,7 +228,7 @@ $rulesSet = [
 ```
 
 ### Required With All
-The field is required if all of the other fields are not `null`.
+The field is required if all the other fields are not `null`.
 ```php
 // Example Usage
 $rulesSet = [
@@ -246,7 +261,7 @@ $rulesSet = [
 
 
 ### Equals
-The field's value must equals the other specified field's value.
+The field's value must be equal to the other specified field's value.
 ```php
 // Example Usage
 $rulesSet = [
@@ -301,6 +316,15 @@ The field must not equal one of the specified options.
 // Example Usage
 $rulesSet = [
     'field' => 'not-in:apple,pear,orange'
+];
+```
+
+### Contains
+The field should be an array and must contain all the specified options (may contain other values not listed).
+```php
+// Example Usage
+$rulesSet = [
+    'field' => 'contains:apple,pear,orange'
 ];
 ```
 
