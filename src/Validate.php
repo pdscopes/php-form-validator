@@ -58,7 +58,10 @@ class Validate
             ->addRule('url', [static::class, 'url'])
             ->addRule('uuid', [static::class, 'uuid'])
 
-            ->addRule('card-number', [static::class, 'cardNumber']);
+            ->addRule('card-number', [static::class, 'cardNumber'])
+            
+            ->addRule('regex', [static::class, 'regex'])
+            ->addRule('not-regex', [static::class, 'notRegex']);
     }
 
 
@@ -1068,6 +1071,68 @@ class Validate
                 continue;
             }
 
+            $validator->addError($attribute, $rule);
+        }
+    }
+
+    /**
+     * custom regex validation
+     * 
+     * When using the regex / not_regex patterns, it may be necessary to specify
+     * rules in an array instead of using | delimiters, especially if the regular
+     * expression contains a | character.
+     * 
+     * @see https://www.php.net/preg_match
+     * 
+     * @param \MadeSimple\Validator\Validator $validator
+     * @param array $data
+     * @param string $pattern
+     * @param string $rule
+     * @param array  $parameters
+     */
+    public static function regex(Validator $validator, $data, $pattern, $rule, $parameters)
+    {
+        $regexPattern = join(',', $parameters);
+
+        foreach (Validator::getValues($data, $pattern) as $attribute => $value) {
+            if (null === $value || empty($value)) {
+                continue;
+            }
+            if (is_string($value) && preg_match($regexPattern, $value)) {
+                continue;
+            }
+            
+            $validator->addError($attribute, $rule);
+        }
+    }
+
+    /**
+     * custom regex validation
+     * 
+     * When using the regex / not_regex patterns, it may be necessary to specify
+     * rules in an array instead of using | delimiters, especially if the regular
+     * expression contains a | character.
+     * 
+     * @see https://www.php.net/preg_match
+     * 
+     * @param \MadeSimple\Validator\Validator $validator
+     * @param array $data
+     * @param string $pattern
+     * @param string $rule
+     * @param array  $parameters
+     */
+    public static function notRegex(Validator $validator, $data, $pattern, $rule, $parameters)
+    {
+        $regexPattern = join(',', $parameters);
+
+        foreach (Validator::getValues($data, $pattern) as $attribute => $value) {
+            if (null === $value || empty($value)) {
+                continue;
+            }
+            if (is_string($value) && !preg_match($regexPattern, $value)) {
+                continue;
+            }
+            
             $validator->addError($attribute, $rule);
         }
     }
