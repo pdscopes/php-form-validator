@@ -89,6 +89,8 @@ The following are all the validation rules that this library provides:
 | [URL](#url)                                 | `url`               |                  | The field must be a valid URL.                                                                                 |
 | [UUID](#uuid)                               | `uuid`              |                  | The field must be a valid UUID (\universally unique identifier).                                               |
 | [Card Number](#card-number)                 | `card-number`       |                  | The field must be a valid card number.                                                                         |
+| [Regex](#regex)                             | `regex`             | `regex pattern`  | The field must match the regex pattern.                                                                       |
+| [Not Regex](#not-regex)                     | `not-regex`         | `regex pattern`  | The field must not match the regex pattern.                                                                   |
 
 ## Adding Extra Rules
 Extra rules can be added to the validator to extend its functionality to provide specific rules for your project.
@@ -502,5 +504,29 @@ http://stackoverflow.com/questions/174730/what-is-the-best-way-to-validate-a-cre
 // Example Usage
 $rulesSet = [
     'field' => 'card-number'
+];
+```
+
+
+### Regex
+The field must match the regex pattern provided as parameter.
+Specify rules in an array when using this rule, especially when the regex expression contains a | character.
+See https://www.php.net/preg_match for nore details.
+```php
+// Example Usage
+$rulesSet = [
+    'field' => ['regex:/^[Ff]oobar[1!]+$/']
+];
+```
+
+
+### Not Regex
+The field must not match the regex pattern provided as parameter.
+Specify rules in an array when using this rule, especially when the regex expression contains a | character.
+See https://www.php.net/preg_match for nore details.
+```php
+// Example Usage
+$rulesSet = [
+    'field' => ['not-regex:/^[abc]{1,3}\W+$/i']
 ];
 ```
