@@ -8,7 +8,7 @@ PHP Form Validator is available on [Packagist](https://packagist.org/packages/ma
 Just add this line to your `composer.json` file:
 
 ```
-"madesimple/php-form-validator": "^2.7"
+"madesimple/php-form-validator": "^2.8"
 ```
 
 or run:
