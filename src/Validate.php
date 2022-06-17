@@ -2,6 +2,7 @@
 
 namespace MadeSimple\Validator;
 
+use Countable;
 use MadeSimple\Arrays\ArrDots;
 
 // Add polyfill in case where running in < PHP 7.3
@@ -99,7 +100,12 @@ class Validate
 
         // Check value is not null
         foreach (Validator::getValues($data, $pattern) as $attribute => $value) {
-            if (!empty($value)) {
+            // not allowed: null, '', [], empty instance Countable
+            if (!(
+                (is_null($value)) ||
+                (is_string($value) && $value === '') ||
+                ((is_array($value) || is_a($value, Countable::class)) && empty($value))
+            )) {
                 continue;
             }
 
