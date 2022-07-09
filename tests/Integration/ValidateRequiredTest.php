@@ -39,6 +39,17 @@ class ValidateRequiredTest extends TestCase
         $this->assertEquals($errors, $this->validator->getProcessedErrors());
     }
 
+    public function testValidateRequiredInvalidEmpty()
+    {
+        $rules  = ['roles' => 'required'];
+        $values = ['roles' => []];
+        $errors = ['errors' => ['roles' => ['required' => 'Roles is required']]];
+        $this->validator->validate($values, $rules);
+
+        $this->assertTrue($this->validator->hasErrors());
+        $this->assertEquals($errors, $this->validator->getProcessedErrors());
+    }
+
     public function testValidateRequiredValidDots()
     {
         $rules  = ['user.*.name' => 'required'];
@@ -64,6 +75,17 @@ class ValidateRequiredTest extends TestCase
         $rules  = ['user.*.name' => 'required'];
         $values = ['user' => [['name' => null]]];
         $errors = ['errors' => ['user.0.name' => ['required' => 'User 0 name is required']]];
+        $this->validator->validate($values, $rules);
+
+        $this->assertTrue($this->validator->hasErrors());
+        $this->assertEquals($errors, $this->validator->getProcessedErrors());
+    }
+    
+    public function testValidateRequiredInvalidEmptyDots()
+    {
+        $rules  = ['user.*.roles' => 'required'];
+        $values = ['user' => [['roles' => []]]];
+        $errors = ['errors' => ['user.0.roles' => ['required' => 'User 0 roles is required']]];
         $this->validator->validate($values, $rules);
 
         $this->assertTrue($this->validator->hasErrors());

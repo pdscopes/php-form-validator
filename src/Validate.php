@@ -2,6 +2,7 @@
 
 namespace MadeSimple\Validator;
 
+use Countable;
 use MadeSimple\Arrays\ArrDots;
 
 // Add polyfill in case where running in < PHP 7.3
@@ -66,6 +67,22 @@ class Validate
 
 
     /**
+     * Checks whether or not $value is filled, 
+     * i.e. $value is no empty string, array or Countable and not null.
+     * 
+     * @param mixed $value
+     * 
+     * @return bool true when $value is filled, elsewise false
+     */
+    protected static function isFilled($value) {
+        return !(
+            (is_null($value)) ||
+            (is_string($value) && $value === '') ||
+            ((is_array($value) || is_a($value, Countable::class)) && empty($value))
+        );
+    }
+    
+    /**
      * present
      *
      * @param \MadeSimple\Validator\Validator $validator
@@ -99,7 +116,8 @@ class Validate
 
         // Check value is not null
         foreach (Validator::getValues($data, $pattern) as $attribute => $value) {
-            if (!empty($value)) {
+            // not allowed: null, '', [], empty instance Countable
+            if (static::isFilled($value)) {
                 continue;
             }
 
@@ -141,11 +159,11 @@ class Validate
             $fieldAttribute = $isWild ? Str::overlapLeftMerge($overlap, $attribute, $field) : $field;
             $fieldValue     = ArrDots::get($data, $fieldAttribute);
 
-            if ($fieldValue === null || !in_array($fieldValue, $values)) {
+            if (!static::isFilled($fieldValue) || !in_array($fieldValue, $values)) {
                 continue;
             }
 
-            if (null !== $value) {
+            if (static::isFilled($value)) {
                 continue;
             }
 
@@ -183,10 +201,10 @@ class Validate
             $fieldAttribute = $isWild ? Str::overlapLeftMerge($overlap, $attribute, $field) : $field;
             $fieldValue     = ArrDots::get($data, $fieldAttribute);
 
-            if ($fieldValue === null) {
+            if (!static::isFilled($fieldValue)) {
                 continue;
             }
-            if ($fieldValue !== null && $value !== null) {
+            if (static::isFilled($value)) {
                 continue;
             }
 
@@ -227,7 +245,7 @@ class Validate
                 foreach ($parameters as $k => $field) {
                     $fieldAttribute = $overlaps[$k] ? Str::overlapLeftMerge($overlaps[$k], $attribute, $field) : $field;
                     $fieldValue     = ArrDots::get($data, $fieldAttribute);
-                    $required       = $required && $fieldValue !== null;
+                    $required       = $required && static::isFilled($fieldValue);
                     if (!$required) {
                         break;
                     }
@@ -252,7 +270,7 @@ class Validate
             foreach ($parameters as $k => $field) {
                 $fieldAttribute = $overlaps[$k] ? Str::overlapLeftMerge($overlaps[$k], $attribute, $field) : $field;
                 $fieldValue     = ArrDots::get($data, $fieldAttribute);
-                $required       = $required && $fieldValue !== null;
+                $required       = $required && static::isFilled($fieldValue);
                 if (!$required) {
                     break;
                 }
@@ -295,7 +313,7 @@ class Validate
             $required = array_reduce($parameters, function ($required, $field) use ($validator, $data) {
                 if (!$required && ArrDots::has($data, $field, $validator::WILD)) {
                     foreach (Validator::getValues($data, $field) as $value) {
-                        $required = $required || $value !== null;
+                        $required = $required || static::isFilled($value);
                     }
 
                 }
@@ -317,7 +335,7 @@ class Validate
             foreach ($parameters as $k => $field) {
                 $fieldAttribute = $overlaps[$k] ? Str::overlapLeftMerge($overlaps[$k], $attribute, $field) : $field;
                 $fieldValue     = ArrDots::get($data, $fieldAttribute);
-                $required       = $required || $fieldValue !== null;
+                $required       = $required || static::isFilled($fieldValue);
                 if ($required) {
                     break;
                 }
@@ -357,13 +375,13 @@ class Validate
 
         // Check value is not null
         foreach (Validator::getValues($data, $pattern) as $attribute => $value) {
-            if ($value !== null) {
+            if (static::isFilled($value)) {
                 continue;
             }
 
             $fieldAttribute = $isWild ? Str::overlapLeftMerge($overlap, $attribute, $field) : $field;
             $fieldValue     = ArrDots::get($data, $fieldAttribute);
-            if ($fieldValue !== null) {
+            if (static::isFilled($fieldValue)) {
                 continue;
             }
 
