@@ -136,7 +136,7 @@ $validator->addRule('model-exists', function (Validator $validator, array $data,
     $db = getDbInstance();
     list($model, $property) = $parameters;
 
-    foreach ($validator->getValues($data, $pattern as $attribute => $value) {
+    foreach ($validator->getValues($data, $pattern) as $attribute => $value) {
         if (null === $value) {
             continue;
         }
@@ -165,7 +165,7 @@ Another example, if you wanted to do a complex validation of a sub-array:
 // Add the rule to the validator
 $validator = new Validator;
 $validator->addRule('complex', function (Validator $validator, array $data, $pattern, $rule, $array $parameters) {
-    foreach ($validator->getValues($data, $pattern as $attribute => $value) {
+    foreach ($validator->getValues($data, $pattern) as $attribute => $value) {
         if (null === $value) {
             continue;
         }
