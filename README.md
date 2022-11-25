@@ -104,7 +104,7 @@ For example, if you wanted to add a rule that would validate that a timezone was
 // Add the rule to the validator
 $validator = new Validator;
 $validator->addRule('timezone', function (Validator $validator, array $data, $pattern, $rule) {
-    foreach ($validator->getValues($data, $pattern as $attribute => $value) {
+    foreach ($validator->getValues($data, $pattern) as $attribute => $value) {
         if (null === $value) {
             continue;
         }
